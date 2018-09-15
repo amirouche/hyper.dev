@@ -169,3 +169,8 @@ input[type="submit"]:hover {
 #root.index ul > li {
     padding: 5px;
 }
+
+#disqus_thread {
+    width: 666px;
+    margin: auto;
+}
