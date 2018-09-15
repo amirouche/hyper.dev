@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="http://localhost:8000">hyperdev.fr</a></h1>
+	    <div><h1>2017/03/01 - Do It Yourself: a Graph Database in Python</h1>
+<p>You maybe already know that I am crazy about graph databases. I am
+trying to build a graph database in Python. Which graphdb? Well this
+is a moving target. The following design is a good for small databases
+that don't include a lot of big fields.</p>
+<p>One must know that there is much much less code in this graphdb
+implementation than in the previous iteration on ajgudb. I think it a
+good fit for graph exploration and analysis but anything that is
+bigger than a personnal website will not work, for sure. It doesn't
+provide transactions anyway.</p>
+<p>It's main advantage is that it's simple and that everything is indexed.</p>
+<p>It is inspired from datomic Entity-Attribute-Value pattern. It based
+on a schema I call the TupleSpace.</p>
+<h3>What is the Tuple Space</h3>
+<p>The idea behind tuple space is to store a set of tuples inside a
+single table that look like the following:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;title&quot;</span><span class="o">,</span> <span class="s">&quot;Building a python graphdb in one night&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;body&quot;</span><span class="o">,</span> <span class="s">&quot;You maybe already know that I am...&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;publishedat&quot;</span><span class="o">,</span> <span class="s">&quot;2015-08-23&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="mi">2</span><span class="o">,</span> <span class="s">&quot;name&quot;</span><span class="o">,</span> <span class="s">&quot;database&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="s">&quot;start&quot;</span><span class="o">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="s">&quot;end&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+<span class="p">(</span><span class="mi">4</span><span class="o">,</span> <span class="s">&quot;title&quot;</span><span class="o">,</span> <span class="s">&quot;key/value store key composition&quot;</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+<span class="p">(</span><span class="mi">42</span><span class="o">,</span> <span class="s">&quot;title&quot;</span><span class="o">,</span> <span class="s">&quot;building a graphdb with HappyBase&quot;</span><span class="p">)</span>
+</pre></div>
+<p>The tuple can be described as (identifier, key, value).</p>
+<p>If you study the above example you will discover that both edges
+(aka. ManyToMany relations) are represented using the same tuple
+schema.</p>
+<p>Representing ForeignKey is possible but is left as an exercice to the
+reader ;)</p>
+<h3>Implementation of a Tuple Space</h3>
+<p>The first section describe the API of the TupleSpace, following section describe how the TupleSpace is implemented on the storage.</p>
+<h4>API</h4>
+<p>The API provided by the tuple space is document oriented instead of tuple oriented. It looks like the following:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TupleSpace</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all tuples with the given uid&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">**</span><span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add the tuples formed with key/value pairs</span>
+<span class="sd">           taken from `properties` and `uid`&quot;&quot;&quot;</span>
+       <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete tuples with `uid`&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate the index for tuples having `key` and</span>
+<span class="sd">           optionaly `value`&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+</pre></div>
+<h4>Schema</h4>
+<p>To implement the above schema inside an ordered key/value store we have to find a relevant key. That key I think, is the composition of the identifier and name. This leads to definition of the following table Key:</p>
+<div class="highlight"><pre><span></span><span class="n">Key</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+<p>Every Key is unique and is associated with a Value. Given the fact that the store is ordered one can easily retrieve every (key, value) tuple associated with a given identifier by going through the the ordered key space.</p>
+<p>The above tuple space will look like the following in the key/value database; using a high level view ie. not bytes view:</p>
+
+<div><pre>*******|           Key            |                 Value
+-------+------------+-------------+------------------------------------------
+Colunms| identifier |  name       |                 value
+-------+------------+-------------+------------------------------------------
+       |     1      |   title     | "Building a python graphdb in one night"
+       |     1      |   body      | "You maybe already know that I am..."
+       |     1      | publishedat |              "2015-08-23"
+       |     2      |   name      |                database
+
+       |     3      |   start     |                   1
+       |     3      |    end      |                   2
+
+            ...          ...                         ...
+
+       |     4      |   title     |     "key/value store key composition"
+
+            ...          ...                         ...
+
+       |     42     |   title     |    "building a graphdb with HappyBase"
+
+            ...          ...                         ...</pre></div>
+<h4>Key composition</h4>
+<p>To keep the database ordered you need to pack correctly the components of the Key. You can not simply convert string to bytes, how will you distinguish the string from the other components of the key? You can't use the string representation of number ie. "42" for "42". Remember "2" is bigger than "10".</p>
+<p>In a complete TupleSpace implementation one must also take into acccount that values can be of many types.</p>
+<p>The simple case of positive integers is solved by struct.pack('&gt;Q', number).</p>
+<p>The solution to support all numbers is to always use the same packing schema whatever the sign and whether they are float or not.</p>
+<p>Here is a naive packing function that support every Python objects, keeps the ordering of strings and positive integers where integers comes before strings which come before other kind of Python values:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__pack</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;1&#39;</span> <span class="o">+</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;q&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">unicode</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;2&#39;</span> <span class="o">+</span> <span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;3&#39;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;4&#39;</span> <span class="o">+</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;q&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span> <span class="o">+</span> <span class="n">data</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">__pack</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+</pre></div>
+<p>In database that is column aware it's not always required to build
+such packing function as the database already has way to compose key
+as columns.</p>
+<h3>GraphDB</h3>
+<p>At this point, the TupleSpace provides documents and some relational
+paradigm as you can work with references. AjguDB provides a layer on
+top of TupleSpace to easily work with a graph database.</p>
+<h4>Data model</h4>
+<p>The first aspect is building the graph data model:</p>
+<p>Vertex are simple TupleSpace documents which identifieres come from
+document 0, a counter which is incremented everytime a new vertex or
+edge is created. Moreover it stores in _meta_type key that the
+document represent a Vertex.</p>
+<p>Edge are also simple TupleSpace documents with their identifier come
+from the counter document with 0. Same as Vertex, Edge document store
+as _meta_type the fact that they are edge. Moreover start and end
+attributes are also stores in the TupleSpace document.</p>
+<p>Given the fact that every tuples are indexed, it's easy to retrieve
+all incomings and outgoings edges of a given Vertex so it's not
+required to cache them in the Vertex document (as it is done in ajgu).</p>
+<h4>Better schema</h4>
+<p>A better schema will use one row per document and use the same row to
+store all edge information. That said tuple spaces is an existing
+pattern in use in distributed databases.</p>
+<p>DIY.</p>
+</div>
+	</div>
+    </body>
+</html>

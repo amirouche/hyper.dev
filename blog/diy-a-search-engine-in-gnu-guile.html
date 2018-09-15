@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="http://localhost:8000">hyperdev.fr</a></h1>
+	    <div><h1>2017/02/01 - Do It Yourself: a search engine in Scheme Guile</h1>
+<p>Search engines are really funny beast they are a mix of algorithm,
+architecture and other domain knowledge from databases, linguistic,
+machine learning and graph theory.</p>
+<p>I don't have the prentention to know all of those but with a help of
+background knowledge, NLP coursera and another description of a search
+engine I will try to buiolg ahem build and blog about a search engine
+mocking the different parts and hopefully make a proper release at
+some point.</p>
+<h3>Taking orders from space</h3>
+<p>To get started let's focus and the high level view of the
+problem. What we want is to be able to search for documents. There is
+two tasks that must be tackled.</p>
+<p>First is the task of return a ranked list of results for a given
+query. A query is a set of words that we look in a database. We will
+massively simplify the problem of matching a query to documents by
+considering that a document is a match if every word from the query
+appears in it. We will put aside the fact that they might be relevant
+synonyms or that the query has typos.</p>
+<p>The more times words from the query appear in a document higher the
+score of the document.</p>
+<p>The second task is the task of gathering and pre-processsing the
+documents into the database.</p>
+<h3>Puting ones and zeros together</h3>
+<p>The first task, querying, comes backward because in reality we must
+first store the documents in the database otherwise there is nothing
+to query. Building the query engine without having the datastructure
+of the data written won't work.</p>
+<p>That's why we will start with the second task of storing the data
+inside wiredtiger tables and then implement the querying and then
+ranking.</p>
+<p>It can be built with a RDBMS database with or without LIKE but I don't
+want to use a RDBMS. If you want you can follow using you prefered SQL
+ninja foo but at least do not use LIKE to make the exercise more
+interesting. In wiredtiger there is no LIKE, part of the task is to
+implement it.</p>
+<p>We will implement unit tests, but it's really nice to have a real
+corpus to test the application. One good candidate are browser
+bookmarks but html requires preprocessing and more code is required to
+retrieve the documents... To cut the chase, we will use the bbc news
+articles dataset as real corpus. You can use whatever plain text
+documents you have. It's best to use a corpus you know well.</p>
+<p>Before reading the solution, think a little while about how you would
+implement it yourself. Read about wiredtiger (it's basically a
+hashmap). Imagine a solution in some language whether it's diagrams,
+scheme or another programming language.</p>
+<h3>Turning plain text files to scheme data</h3>
+<h4>Going through a set of files</h4>
+<p>First download the bbc dataset. Extract it somewhere, for instance in
+~/src/guile/artafath. artafath means share the light, literaly ar is
+give back and tafath is light so it reads literally give back the
+light.</p>
+<p>We need a procedure to iterate over all the files, we will use file
+tree walk procedure to implement a (for-each-file directory extension
+proc) procedure that will iterate over all files that have EXTENSION
+as extension inside DIRECTORY and execute a procedure PROC which is
+passed the path of a matching file:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">for-each-file</span> <span class="nv">directory</span> <span class="nv">extension</span> <span class="nv">proc</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">ftw</span> <span class="nv">directory</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">filename</span> <span class="nv">statinfo</span> <span class="nv">flag</span><span class="p">)</span>
+                   <span class="p">(</span><span class="nf">match</span> <span class="nv">flag</span>
+                     <span class="p">(</span><span class="ss">&#39;regular</span> <span class="p">(</span><span class="nf">proc</span> <span class="nv">filename</span><span class="p">)</span>
+                                <span class="no">#t</span><span class="nv">rue</span><span class="p">)</span>
+                     <span class="p">(</span><span class="ss">&#39;directory</span> <span class="no">#t</span><span class="nv">rue</span><span class="p">)))))</span>
+</pre></div>
+<p>I choosed to do pattern matching.</p>
+<p>for-each-file only excutes proc (just like for-each) and doesn't
+return anything useful (like fold or map) so onward we will only think
+in terms of file.</p>
+<h4>Naive parsing of text files</h4>
+<p>We could simply store the content of the file in a column associated
+with its filename. The problem with that solution is that we can not
+easily count the number of times a word appears in the text without
+going through the text which has a algorithmic complexity of O(n)
+instead we will convert the text into a sparse matrix counting the
+number of times a word a appears in the text. We will call this sparse
+matrix the bag of words or simply bag.</p>
+<p>We must read the content of the file and turn it into a scheme string,
+reading file as string is done with (ice-9 rdelim) module. For this
+operation we can simply do:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">file-&gt;string</span> <span class="nv">filepath</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">call-with-input-file </span><span class="nv">filepath</span> <span class="nv">read-string</span><span class="p">))</span>
+</pre></div>
+<p>Save this procedure it's useful.</p>
+<p>Now we need to 1) lowercase the string so that queries will be case
+insensitive, words of the query will also be lower case. 2) turn the
+string into token, which in this case means parsing words. We will
+adopt a simple approach which works great, most of the time, for
+english by removing punctuation and splitting by space 3) count the
+words and store everything in an association.</p>
+<p>Let's implement 1) and 2) in (string-&gt;tokens text) procedure:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">use-modules</span> <span class="p">(</span><span class="nf">srfi</span> <span class="nv">srfi-26</span><span class="p">))</span> <span class="c1">;; for cut</span>
+
+<span class="p">(</span><span class="k">define </span><span class="nv">punctuation</span> <span class="p">(</span><span class="nb">string-&gt;list </span><span class="s">&quot;!\&quot;#$%&amp;\\&#39;()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">clean</span> <span class="nv">text</span><span class="p">)</span>
+  <span class="s">&quot;Replace punctuation characters from TEXT with a space character&quot;</span>
+  <span class="p">(</span><span class="nf">string-map</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">char</span><span class="p">)</span> <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nf">list-index</span> <span class="nv">punctuation</span> <span class="nv">char</span><span class="p">)</span> <span class="sc">#\space</span> <span class="nv">char</span><span class="p">))</span> <span class="nv">text</span><span class="p">))</span>
+
+<span class="p">(</span><span class="k">define </span><span class="nv">split</span> <span class="p">(</span><span class="nf">cut</span> <span class="nv">string-split</span> <span class="nv">&lt;&gt;</span> <span class="sc">#\space</span><span class="p">))</span>
+
+<span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">sanitize</span> <span class="nv">words</span><span class="p">)</span>
+  <span class="s">&quot;Only keep words that have length bigger than one&quot;</span>
+  <span class="p">(</span><span class="nf">filter</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">word</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt; </span><span class="mi">1</span> <span class="p">(</span><span class="nb">string-length </span><span class="nv">word</span><span class="p">)))</span> <span class="nv">words</span><span class="p">))</span>
+
+<span class="c1">;; compose must be read from right to left</span>
+<span class="p">(</span><span class="k">define </span><span class="nv">string-&gt;tokens</span> <span class="p">(</span><span class="nf">compose</span> <span class="nv">sanitize</span> <span class="nv">split</span> <span class="nv">string-downcase</span> <span class="nv">clean</span><span class="p">))</span>
+</pre></div>
+<p>srfi 26 provides the handy cut form.</p>
+<p>The third steps is to build the bag of words, a mapping between a word
+and the number of time it appears. It's a sparse vector. We use this
+to 1) avoid to store all the text 2) we make the data more computer
+friendly, kind of... 3) we pre-compute the values that we will need
+later to match the query against the documents.</p>
+<p>The following procedures takes an association BAG and increment a the
+integer associated with WORD in a persistent way ie. without mutation,
+it creates a new association (no exclamation mark ! as suffix):</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">bag-increment</span> <span class="nv">bag</span> <span class="nv">word</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">count</span> <span class="p">(</span><span class="nf">assoc-ref</span> <span class="nv">bag</span> <span class="nv">word</span><span class="p">)))</span>
+    <span class="p">(</span><span class="k">if </span><span class="nv">count</span>
+        <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">bag</span> <span class="p">(</span><span class="nf">alist-delete</span> <span class="nv">word</span> <span class="nv">bag</span><span class="p">)))</span>
+          <span class="p">(</span><span class="nf">acons</span> <span class="nv">word</span> <span class="p">(</span><span class="mi">1</span><span class="nv">+</span> <span class="nv">count</span><span class="p">)</span> <span class="nv">bag</span><span class="p">))</span>
+        <span class="p">(</span><span class="nf">acons</span> <span class="nv">word</span> <span class="mi">1</span> <span class="nv">bag</span><span class="p">))))</span>
+</pre></div>
+<p>Now we will have to use recursive loop thanks to a named let to
+iterate over the words to create the bag of words:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">words-&gt;bag</span> <span class="nv">text</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let </span><span class="nv">loop</span> <span class="p">((</span><span class="nf">bag</span> <span class="o">&#39;</span><span class="p">())</span>
+             <span class="p">(</span><span class="nf">text</span> <span class="nv">text</span><span class="p">))</span>
+    <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">null? </span><span class="nv">text</span><span class="p">)</span>
+        <span class="nv">bag</span>
+        <span class="p">(</span><span class="nf">loop</span> <span class="p">(</span><span class="nf">bag-increment</span> <span class="nv">bag</span> <span class="p">(</span><span class="nb">car </span><span class="nv">text</span><span class="p">))</span> <span class="p">(</span><span class="nb">cdr </span><span class="nv">text</span><span class="p">)))))</span>
+</pre></div>
+<p>Check point. The following program:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="nv">tokens</span> <span class="p">(</span><span class="nf">string-&gt;tokens</span> <span class="s">&quot;Janet eat a kiwi! A kiwi!&quot;</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">pk</span> <span class="p">(</span><span class="nf">words-&gt;bag</span> <span class="nv">tokens</span><span class="p">))</span>
+</pre></div>
+<p>Outputs the following:</p>
+<div class="highlight"><pre><span></span><span class="p">((</span><span class="s">&quot;kiwi&quot;</span> <span class="o">.</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="s">&quot;eat&quot;</span> <span class="o">.</span> <span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="s">&quot;janet&quot;</span> <span class="o">.</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+<p>This must be turned into a unit test. Use this template to create one:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">use-modules</span> <span class="p">(</span><span class="nf">srfi</span> <span class="nv">srfi-64</span><span class="p">))</span> <span class="c1">;; unit test framework</span>
+
+<span class="p">(</span><span class="nf">use-modules</span> <span class="p">(</span><span class="nf">artafath</span><span class="p">))</span>
+
+
+<span class="p">(</span><span class="nf">test-begin</span> <span class="s">&quot;artafath&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">test-group</span> <span class="s">&quot;string-&gt;tokens&quot;</span>
+    <span class="p">(</span><span class="nf">test-equal</span> <span class="s">&quot;integration&quot;</span> <span class="p">(</span><span class="nf">string-&gt;tokens</span> <span class="s">&quot;Janet eat a kiwi! a kiwy!&quot;</span><span class="p">)</span> <span class="o">&#39;</span><span class="p">()))</span>
+<span class="p">(</span><span class="nf">test-end</span> <span class="s">&quot;artafath&quot;</span><span class="p">)</span>
+</pre></div>
+<p>Remains to store the data in wiredtiger and rank a query against the database.</p>
+<p>DIY.</p>
+</div>
+	</div>
+    </body>
+</html>
