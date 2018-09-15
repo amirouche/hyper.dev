@@ -1,4 +1,4 @@
-# 2017/02/01 - Do It Yourself: a search engine in Scheme Guile
+# 2017/01/01 - Do It Yourself: a search engine in Scheme Guile
 
 Search engines are really funny beast they are a mix of algorithm,
 architecture and other domain knowledge from databases, linguistic,
@@ -73,7 +73,7 @@ proc) procedure that will iterate over all files that have EXTENSION
 as extension inside DIRECTORY and execute a procedure PROC which is
 passed the path of a matching file:
 
-```scheme
+```
 (define (for-each-file directory extension proc)
   (ftw directory (lambda (filename statinfo flag)
                    (match flag
@@ -102,7 +102,7 @@ We must read the content of the file and turn it into a scheme string,
 reading file as string is done with (ice-9 rdelim) module. For this
 operation we can simply do:
 
-```scheme
+```
 (define (file->string filepath)
   (call-with-input-file filepath read-string))
 ```
@@ -118,7 +118,7 @@ words and store everything in an association.
 
 Let's implement 1) and 2) in (string->tokens text) procedure:
 
-```scheme
+```
 (use-modules (srfi srfi-26)) ;; for cut
 
 (define punctuation (string->list "!\"#$%&\\'()*+,-./:;<=>?@[\\]^_`{|}~"))
@@ -149,7 +149,7 @@ The following procedures takes an association BAG and increment a the
 integer associated with WORD in a persistent way ie. without mutation,
 it creates a new association (no exclamation mark ! as suffix):
 
-```scheme
+```
 (define (bag-increment bag word)
   (let ((count (assoc-ref bag word)))
     (if count
@@ -161,7 +161,7 @@ it creates a new association (no exclamation mark ! as suffix):
 Now we will have to use recursive loop thanks to a named let to
 iterate over the words to create the bag of words:
 
-```scheme
+```
 (define (words->bag text)
   (let loop ((bag '())
              (text text))
@@ -172,20 +172,20 @@ iterate over the words to create the bag of words:
 
 Check point. The following program:
 
-```scheme
+```
 (define tokens (string->tokens "Janet eat a kiwi! A kiwi!"))
 (pk (words->bag tokens))
 ```
 
 Outputs the following:
 
-```scheme
+```
 (("kiwi" . 2) ("eat" . 1) ("janet" . 1))
 ```
 
 This must be turned into a unit test. Use this template to create one:
 
-```scheme
+```
 (use-modules (srfi srfi-64)) ;; unit test framework
 
 (use-modules (artafath))

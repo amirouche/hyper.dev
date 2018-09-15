@@ -1,4 +1,4 @@
-# 2017/01/01 - Do It Yourself: an Artificial Intelligence
+# 2017/01/01 - Do It Yourself: an artificial intelligence
 
 The main goal of artificial intelligence (AI) is to translate human
 knowledge into equations.

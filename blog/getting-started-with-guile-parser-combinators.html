@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2016/01/01 - Getting started with Guile Parser Combinators</h1>
+<p>Guile Parser Combinators implement (monadic) parser combinators. What
+it means in pratice is that you create procedures that parse most of
+the time strings and output a structured data, most likely s-expr. They
+are said to be <em>combinators</em> because you can compose parser
+procedures. The monadic part is an implementation detail mostly.</p>
+<p>Say you want to parse some input text something like markdown and turn
+it into sxml.</p>
+<p>Be aware that guile-parser-combinators (unlike guile-log) doesn't have
+an error handling machinery but since you compose small parser to make
+a bigger parser it's easy to debug the small units and have a working
+parser.</p>
+<p>This blog use a <a href="/markdown.scm">markdown parser</a> implemented using
+guile-parser-combinator; it ain't perfect, they are bugs with
+workarounds.</p>
+<p>The first part of this article introduce guile-parser-combinators
+concepts and then apply them to build a csv parser.</p>
+<h3>Getting started</h3>
+<p>Download guile-parser-combinator:</p>
+
+<div><pre>$ git clone git://dthompson.us/guile-parser-combinators</pre></div>
+<p>Fire an REPL inside the created directory:</p>
+
+<div><pre>$ cd guile-parser-combinators
+guile-parser-combinators $ guile -L `pwd`
+scheme@(guile-user)&gt; (use-modules (parser-combinators))</pre></div>
+<p>We will heavily rely on streams aka.
+<a href="https://www.gnu.org/software/guile/manual/html_node/SRFI_002d41-Stream-Library.html">srfi 41</a>,
+don't forget to import it:</p>
+
+<div><pre>scheme@(guile-user)&gt; (use-modules (srfi srfi-41))</pre></div>
+<p>You are ready!</p>
+<h3>Three kinds of parsers</h3>
+<p>All parsers can return two kind of values of <code>&lt;parse-result&gt;</code> a
+<code>parse-success</code> or a <code>parse-failure</code>. <code>parse-success</code> have a <code>value</code>
+which is the output of the parser and a <code>stream</code> which is what remains
+to be parsed. <code>parse-failure</code> results have no value and no stream.</p>
+<p>There is three kind of parsers in guile-parser-combinators. In the
+following I described them in the case where the input is strings and
+the final output is an s-expr:</p>
+<ul>
+<li><p>plain parser: <code>string -&gt; string</code>. This allows to recognize and split
+input string into small units. This is the most basic parser. Example
+plain parser is <code>(parse-char #\c)</code> which will succeed if the input
+stream starts with a <code>c</code> char, otherwise it fails. It will return
+<code>c</code> as value and return the input stream queue.</p>
+</li>
+<li><p>combinator parser: <code>parser -&gt; parser</code>. Those takes as input a parser
+and output another parser. This might seem strange. I think it's better
+to call them <em>control</em> parsers but the literature says otheriwse.
+Example combinator parser is <code>(parse-any (parse-char #\a) (parse-char #\b) (parse-char #\c))</code>
+which will succeed if any of its input parser succeed. Which means in this
+case that the input stream must start with <code>a</code> or <code>b</code> or <code>c</code> char.</p>
+</li>
+<li><p>output builder: <code>s-expr -&gt; s-expr</code>. Those are not really parser as they never
+consume the input stream but instead shake around <code>&lt;parse-result&gt;</code> value.</p>
+</li>
+</ul>
+<p>All those parsers are further explained in what follows.</p>
+<h4>Plain parsers</h4>
+<p>I lied a little previously, I said that plain parser take as input
+string and output string. Actually it's just a (second hand) view to
+understand how parser works.  The actual implementation takes as input
+a stream and outputs a <code>parse-result</code>.</p>
+<p>For instance the following is a valid parser, that will return a
+<code>parse-result</code> that succeed when the first char in the stream is
+a <code>c</code>:</p>
+
+<div><pre>(define (parse-c-char stream)
+    (if (eqv? (stream-car stream) #\c)
+        (parse-result #\c (stream-cdr stream))))</pre></div>
+<p>You can test it with the following:</p>
+
+<div><pre>scheme@(guile-user)&gt; (list-&gt;stream '(#\c #\c #\c))
+$3 = #&lt;stream ...&gt;
+scheme@(guile-user)&gt; (parse-c-char $3)
+$4 = #&lt;&lt;parse-result&gt; value: #\c stream: #&lt;stream ...&gt;&gt;</pre></div>
+<p>The only problem of this parser is that it doesn't handle the case
+where the input stream is empty. Nonetheless start to get the idea.</p>
+<p>To parse a <code>c</code> char using guile-parser-combinator, you have to use
+the <code>(parse-char char)</code> procedure which returns a parser that succeed
+if the first item of the input stream is a <code>c</code> and fails otherwise:</p>
+
+<div><pre>scheme@(guile-user)&gt; ((parse-char #\c) (list-&gt;stream '(#\c #\c #\c)))
+$8 = #&lt;&lt;parse-result&gt; value: #\c stream: #&lt;stream ...&gt;&gt;
+scheme@(guile-user)&gt; ((parse-char #\c) (list-&gt;stream '(#\a #\b #\c)))
+$9 = #&lt;&lt;parse-result&gt; value: #f stream: #f&gt;</pre></div>
+<p>As you can see in result <code>$8</code>, <code>parse-result</code>'s value is the <code>c</code> char.
+You can't check easily that <code>(parse-char #\c)</code> consumed the input stream,
+you'll have to believe me for now.</p>
+<p>Here's the implementation of <code>parse-char</code>, as you can see, it return a
+<code>stream -&gt; parse-result</code> procedure:</p>
+
+<div><pre>(define (parse-char char)
+  "Create a parser that succeeds when the next character in the stream
+   is CHAR."
+  (lambda (stream)
+    (stream-match stream
+      (() %parse-failure)
+      ((head . tail)
+       (if (equal? head c)
+           (parse-result head tail)
+           %parse-failure)))))</pre></div>
+<p>There is various procedure that return plain parsers:</p>
+<ul>
+<li><p><code>(parse-char char)</code></p>
+</li>
+<li><p><code>(parse-char-set char-set)</code> which parse a char from the provided charset.</p>
+</li>
+<li><p><code>(parse-string string)</code> which parse iteratively the list of chars
+that makes up <code>string</code> from the input stream.</p>
+</li>
+</ul>
+<p>Let's try the last procedure:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define string-&gt;stream (compose list-&gt;stream string-&gt;list))
+scheme@(guile-user)&gt; ((parse-string "ccc") (string-&gt;stream "ccc means chaos computer club"))
+$12 = #&lt;&lt;parse-result&gt; value: "ccc" stream: #&lt;stream ...&gt;&gt;</pre></div>
+<p>There is also <code>parse-any-char</code> which is not a procedure that returns a
+parser, but a plain parser. It will consume any char found in the
+input stream:</p>
+
+<div><pre>scheme@(guile-user)&gt; (parse-any-char (string-&gt;stream "scheme is awesome"))
+$13 = #&lt;&lt;parse-result&gt; value: #\s stream: #&lt;stream ...&gt;&gt;
+scheme@(guile-user)&gt; (parse-any-char (string-&gt;stream "\nthis starts with a newline"))
+$15 = #&lt;&lt;parse-result&gt; value: #\newline stream: #&lt;stream ...&gt;&gt;</pre></div>
+<p>At this point, if things are still fuzzy, it's ok because you still
+don't know how given only <code>(parse-string string)</code>, <code>(parse-char char)</code>
+and <code>parse-any-char</code> plain parsers how you can parse something. Things
+will get more interesting once you know about <em>control parser</em>!</p>
+<h4>Combinator parsers</h4>
+<p>Combinator (control?) parsers are procedures similar in principle to
+<code>compose</code> except they take as input other parser and are tailored to
+compose them using semantic useful in the context of parsing.</p>
+<p>Here is the full list of control parsers:</p>
+<ul>
+<li><p><code>(parse-any parser ...)</code> try to parse input stream with each parser
+given as argument and succeed as soon as one of the parser succeed.
+Fails if no parser succeed. (It also called <code>parse-or</code>)</p>
+</li>
+<li><p><code>(parse-each parser ...)</code> parse input with the parser provided as
+argument feeding each parser with the stream that previous parser
+returned. Succeed only if all parser succeed. This allows to parse a
+sequence of items from the stream otherwise to walk forward in the
+stream.</p>
+</li>
+<li><p><code>(parse-zero-or-more parser)</code> and <code>(parse-one-or-more parser)</code> will
+apply the parser passed argument zero or one or more times to the
+input stream feeding the result stream of the first iteration to the
+same parser until <code>parser</code> can't parse anything from the input
+stream. <code>parse-zero-or-more</code> succeed all the time but will return
+the same stream as the input stream if it can't parse even once the
+intput stream. <code>parse-one-or-more</code> must at least succeed once to
+parse the input stream. This also allows to walk forward the stream.</p>
+</li>
+</ul>
+<p>Let's try <code>parse-each</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; ((parse-each parse-any-char parse-any-char parse-any-char) (string-&gt;stream "gnu"))
+$17 = #&lt;&lt;parse-result&gt; value: (#\g #\n #\u) stream: #&lt;stream ...&gt;&gt;
+scheme@(guile-user)&gt; (define parse-gnu (parse-each (parse-char #\g) (parse-char #\n) (parse-char #\u)))
+scheme@(guile-user)&gt; (parse-gnu (string-&gt;stream "gnu"))
+$18 = #&lt;&lt;parse-result&gt; value: (#\g #\n #\u) stream: #&lt;stream ...&gt;&gt;
+scheme@(guile-user)&gt; (parse-gnu (string-&gt;stream "ccc"))
+$19 = #&lt;&lt;parse-result&gt; value: #f stream: #f&gt;</pre></div>
+<p>Let's try <code>parse-any</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-a-or-b (parse-any (parse-char #\a) (parse-char #\b)))
+scheme@(guile-user)&gt; (parse-a-or-b (string-&gt;stream "a"))
+$20 = #&lt;&lt;parse-result&gt; value: #\a stream: #&lt;stream ...&gt;&gt;
+scheme@(guile-user)&gt; (parse-a-or-b (string-&gt;stream "b"))
+$21 = #&lt;&lt;parse-result&gt; value: #\b stream: #&lt;stream ...&gt;&gt;
+scheme@(guile-user)&gt; (parse-a-or-b (string-&gt;stream "c"))
+$22 = #&lt;&lt;parse-result&gt; value: #f stream: #f&gt;</pre></div>
+<p>I guess now you get the point.</p>
+<h4>Output builder</h4>
+<p>Output builder parsers are special parser that takes a parser as
+argument and process its output before returning. You can use
+<code>(parse-map proc parser)</code> or <code>(parse-match parser matcher ...)</code> to do so.</p>
+<p>For instance, here is an example use of <code>parse-map</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-gnu* (parse-map (lambda (lst) `(b ,(list-&gt;string lst))) parse-gnu))
+scheme@(guile-user)&gt; (parse-gnu* (string-&gt;stream "gnu is awesome"))
+$25 = #&lt;&lt;parse-result&gt; value: (b "gnu")) stream: #&lt;stream ...&gt;&gt;</pre></div>
+<p>As you can see <code>parse-gnu*</code> returns <code>(b "gnu")</code>.</p>
+<h3>wrapping with a csv parser</h3>
+<p>csv is a notoriously difficult text file format to parse because it
+comes in much different flavor. In what follows we will describe a
+parser for somekind of csv format that is straightforward.</p>
+<p>For our csv parser we want the following two unit tests to pass:</p>
+
+<div><pre>(define-syntax test-check
+  (syntax-rules ()
+    ((_ title tested-expression expected-result)
+     (begin
+       (format #t "* Checking ~s\n" title)
+       (let* ((expected expected-result)
+              (produced tested-expression))
+         (if (not (equal? expected produced))
+             (begin (format #t "Expected: ~s\n" expected)
+                    (format #t "Computed: ~s\n" produced))))))))
+
+
+(when (or (getenv "CHECK") (getenv "CHECK_MARKDOWN"))
+  (test-check "single line"
+              (csv "a;b;c;")
+              (list (list "a" "b" "c")))
+
+  (test-check "multi line"
+              (csv "a;b;c;
+d;e;f;")
+              (list (list "a" "b" "c") (list "d" "e" "f"))))</pre></div>
+<p>Otherwise said, a csv will be a multiline string with columns
+separated by semi-colon chars.</p>
+<h4><code>parse-unless</code></h4>
+<p>To be able to parse such a format, we need to introduce another parser
+combinator called <code>(parse-unless predicate parser)</code>. What it does is
+that it only execute <code>parser</code> if <code>predicate</code> parser fails. This is
+useful because a lot of time they are control characters in the input
+stream that identifies the start or end of a given text unit. In the
+case of the csv parser there is two control chars: the semi-colon and
+newlines.</p>
+<p>The implementation of <code>parse-unless</code> is simple! Here is it:</p>
+
+<div><pre>(define (parse-unless predicate parser)
+  (lambda (stream)
+    (match (predicate stream)
+      ((? parse-failure?) (parser stream))
+      (_ %parse-failure))))</pre></div>
+<p>Basically what it does, is that it checks that <code>predicate</code> parser
+fails on input stream and in that case execute <code>parser</code>.</p>
+<p>(Otherwise the big picture is that the caller, rewinds the stream
+until it can find a branch using <code>parse-any</code> that
+succeeds... otherwise said, parser combinators try every parser until
+it find a parser that succeed or it fails).</p>
+<p>Anyway, this allows to check for the presence of control chars before
+parsing something. There is an similar <code>(parse-when predicate parser)</code>
+and you might think that it's equally useful but in practice when
+parsing <code>parse-unless</code> is much more useful. It has to do with the fact,
+that negation allows to capture much more logic that plain equality.
+Negation is very powerful.</p>
+<h4>Parsing a column</h4>
+<p>In csv a column looks like <code>abc;</code> where the semi-colon <code>;</code> marks the
+end of the column. So a column is made of its value in this case <code>abc</code>
+and its end marker the semi-colon. A such, a column value can be
+anything but a semi-colon. This is a first parser:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-column-value-char (parse-unless (parse-char #\;) parse-any-char))
+scheme@(guile-user)&gt; (parse-column-value-char (string-&gt;stream "abc;"))
+$1 = #&lt;&lt;parse-result&gt; value: #\a stream: #&lt;stream ...&gt;&gt;
+scheme@(guile-user)&gt; (parse-column-value-char (string-&gt;stream ";abc"))
+$2 = #&lt;&lt;parse-result&gt; value: #f stream: #f&gt;</pre></div>
+<p>But this parser only parse a single char, let's repeat the same parser
+several times, one or more times using <code>parse-one-or-more</code> (we
+consider that everycolumn has at least one char value).</p>
+
+<div><pre>scheme@(guile-user)&gt; ((parse-one-or-more parse-column-value-char) (string-&gt;stream "abc;"))
+$3 = #&lt;&lt;parse-result&gt; value: (#\a #\b #\c) stream: #&lt;stream #\; ...&gt;&gt;</pre></div>
+<p>And there we have parsed the first column value "abc" but it's not
+properly packed as a string, to fix that we can use <code>(parse-map proc
+parser)</code> which will lift the <code>parse-result</code>'s value with <code>list-&gt;string</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; ((parse-map list-&gt;string (parse-one-or-more parse-column-value-char)) (string-&gt;stream "abc;"))
+$4 = #&lt;&lt;parse-result&gt; value: "abc" stream: #&lt;stream #\; ...&gt;&gt;</pre></div>
+<p>We can make of this the first parser unit of our csv parser, as it
+really parse a single column value and properly packs it:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-column-value (parse-map list-&gt;string (parse-one-or-more parse-column-value-char)))
+scheme@(guile-user)&gt; (parse-column-value (string-&gt;stream "abc;"))
+$5 = #&lt;&lt;parse-result&gt; value: "abc" stream: #&lt;stream #\; ...&gt;&gt;</pre></div>
+<p>As you can see, there's still elements in the stream. The semi-colon
+control character is not parsed yet, but it's really part of the
+column.  So what will do next is parse that control char and remove it
+from <code>parse-result</code> using <code>parse-map</code>. Try to guess how before reading
+what's follows.</p>
+<p>So we need to chain our <code>parse-column-value</code> with a
+<code>parse-column-control-char</code>.  But before that
+<code>parse-column-control-char</code> is a simple <code>(parse-char #\;)</code>, we define
+it to make the parser more readable and redefine <code>parse-column-value</code>
+it terms of it because that's actually the real semantic of parsing a
+column value:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-column-control-char (parse-char #\;))
+scheme@(guile-user)&gt; (define parse-column-value-char (parse-unless parse-column-control-char parse-any-char))
+scheme@(guile-user)&gt; (define parse-column-value (parse-map list-&gt;string (parse-one-or-more parse-column-value-char)))</pre></div>
+<p>Check that <code>parse-column-value</code> still works as expected.</p>
+<p>Like I said earlier we need to chain <code>parse-column-value</code> with
+<code>parse-column-control-char</code> to build <code>parse-column</code>. For that we can
+use <code>(parse-each parser ...)</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; ((parse-each parse-column-value parse-column-control-char) (string-&gt;stream "abc;def;"))
+$7 = #&lt;&lt;parse-result&gt; value: ("abc" #\;) stream: #&lt;stream ...&gt;&gt;</pre></div>
+<p>As you can see, now we have a list with two values in
+<code>parse-result</code>. We don't care about the semi-colon in the output. It's
+only present in the input to mark the end of column. So we <code>parse-map</code> away:</p>
+
+<div><pre>scheme@(guile-user)&gt; ((parse-map car (parse-each parse-column-value parse-column-control-char)) (string-&gt;stream "abc;def;"))
+$9 = #&lt;&lt;parse-result&gt; value: "abc" stream: #&lt;stream ...&gt;&gt;</pre></div>
+<p>That's is it, we have the definition of <code>parse-column</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-column (parse-map car (parse-each parse-column-value parse-column-control-char)))
+scheme@(guile-user)&gt; (parse-column (string-&gt;stream "abc;def;gnu;"))
+$10 = #&lt;&lt;parse-result&gt; value: "abc" stream: #&lt;stream ...&gt;&gt;</pre></div>
+<p>As you might have guess we can repeat one or more time <code>parse-column</code>
+to parse a single row:</p>
+
+<div><pre>scheme@(guile-user)&gt; ((parse-one-or-more parse-column) (string-&gt;stream "abc;def;gnu;"))
+$12 = #&lt;&lt;parse-result&gt; value: ("abc" "def" "gnu") stream: #&lt;stream&gt;&gt;</pre></div>
+<p>Neat isn't it?</p>
+<p>But this doesn't really every kind of row. Because there is two kind of rows:</p>
+<ul>
+<li>The last row that ends with an <code>eof</code></li>
+<li>The other rows that ends with a newline</li>
+</ul>
+<p>Let's define a <code>parse-eol</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-eol (parse-any parse-end (parse-char #\newline)))</pre></div>
+<p>Now we can (almost) define <code>parse-row</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-row (parse-each (parse-one-or-more parse-column) parse-eol))
+scheme@(guile-user)&gt; (parse-row (string-&gt;stream "abc;def;gnu;"))
+$15 = #&lt;&lt;parse-result&gt; value: (("abc" "def" "gnu") #t) stream: #&lt;stream&gt;&gt;</pre></div>
+<p>As you can see, there is some #t garbage in the <code>parse-result</code>'s
+value. let's get rid of it using <code>parse-map</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-row (parse-map car (parse-each (parse-one-or-more parse-column) parse-eol)))
+scheme@(guile-user)&gt; (parse-row (string-&gt;stream "abc;def;gnu;"))
+$16 = #&lt;&lt;parse-result&gt; value: ("abc" "def" "gnu") stream: #&lt;stream&gt;&gt;</pre></div>
+<p>Wee!!! We have complete row! Guess what parser combinator you have to
+use to parse several rows...</p>
+<p>Time is up:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-csv (parse-one-or-more parse-row))</pre></div>
+<p>Let's define a small csv document and try to parse it:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define document "abc;def;gnu;\n123;456;789;")
+scheme@(guile-user)&gt; (parse-csv (string-&gt;stream document))
+$21 = #&lt;&lt;parse-result&gt; value: (("abc" "def" "gnu" "\n123" "456" "789")) stream: #&lt;stream&gt;&gt;</pre></div>
+<p>Ooops! There is a single list in the output; there's a bug in a
+parser! There is no such thing as <code>\n123</code> column. So there must be a
+bug in the <code>parse-column</code> parser... The solution is... to not parse
+columns starting with a newline! So let's use <code>parse-unless</code> again:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define parse-column (parse-unless (parse-char #\newline) (parse-map car (parse-each parse-column-value parse-column-control-char))))</pre></div>
+<p>Our final csv parser looks like the following:</p>
+
+<div><pre>(define parse-column-control-char (parse-char #\;))
+(define parse-column-value-char (parse-unless parse-column-control-char parse-any-char))
+(define parse-column-value (parse-map list-&gt;string (parse-one-or-more parse-column-value-char)))
+(define parse-column (parse-unless (parse-char #\newline) (parse-map car (parse-each parse-column-value parse-column-control-char))))
+(define parse-row (parse-map car (parse-each (parse-one-or-more parse-column) parse-eol)))
+(define parse-csv (parse-one-or-more parse-row))</pre></div>
+<p>There is a handy <code>parse</code> procedure in guile-parser-combinators that
+allows to define the following procedure:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define (csv string) (parse parse-csv string))
+scheme@(guile-user)&gt; (csv document)
+$14 = (("abc" "def" "gnu") ("123" "456" "789"))</pre></div>
+<p>That's all folks!</p>
+</div>
+	</div>
+    </body>
+</html>

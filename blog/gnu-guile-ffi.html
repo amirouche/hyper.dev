@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2018/01/01 - Getting Started With Guile Dynamic Foreign Function Interface</h1>
+<p>I created a dynamic-link star procedure to help during the creation of
+dynamic ffi bindings (which is the prefered way to go now on).</p>
+<p>It's helpful for several reasons:</p>
+<ul>
+<li><p>no need to explicitly call dynamic-func and pointer-&gt;procedure, so
+it's two less procedures to know about.</p>
+</li>
+<li><p>It mimicks the C signature, so it's easier to read.</p>
+</li>
+</ul>
+<p>This documentation is meant to be self sufficient which means that you
+should be able to fully bind your favorite function based C library
+just by reading this.</p>
+<p>The code of the procedure is at the bottom.</p>
+
+<div><pre>((dynamic-link* [library-name]) return-type function-name . arguments)</pre></div>
+<p>Return a lambda that returns a scheme procedure linked against
+FUNCTION-NAME found in LIBRARY-NAME. If LIBRARY-NAME is not provided
+this links against the C standard library.</p>
+<p>The returned procedure takes the signature of the function that you
+want to link against.</p>
+<p>Also RETURN-TYPE and ARGUMENTS must be foreign types. They can be
+found in (system foreign): int8, uint8, uint16, int16, uint32, int32,
+uint64, int64, float, double.</p>
+<p>In addition, platform-dependent types variables exists: int,
+unsigned-int, long, unsigned-long, size_t, ssize_t, ptrdiff_t.</p>
+<p>There is also a void variable that must be used to wrap function that
+returns nothing.</p>
+<p>Last but not least, the star symbol is used by convention to denote
+pointer types.</p>
+<p>More <a href="https://www.gnu.org/software/guile/manual/html_node/Foreign-Types.html#Foreign-Types">documentation about foreign types</a>.</p>
+<h3>Example</h3>
+<p>Here is a REPL run, showing how it works:</p>
+
+<div><pre>(define stdlib (dynamic-link*))  ;; link against stdlib
+(define strlen (stdlib int "strlen" '*))  ;; retrieve a procedure associated to "strlen"
+(strlen (string-&gt;pointer "abc"))</pre></div>
+<p>Since you probably don't want to expose the pointer api to the dev. You might define the following strlen procedure:</p>
+
+<div><pre>(define stdlib (dynamic-link*))  ;; link against stdlib
+
+(define (strlen string)
+   (let ((function (stdlib (int "strlen" '*))))  ;; retrieve strlen function as a procedure
+   (function (string-&gt;pointer string))))</pre></div>
+<p>AFAIK, there is no performance gain in memoizing stdlib or function.
+Where to go from here?</p>
+<p>If you need to bind structures the proper way to go is to use scheme bytestructures.
+The code</p>
+
+<div><pre>(use-modules (system foreign))
+
+(define* (dynamic-link* #:optional library-name)
+   (let ((shared-object (if library-name (dynamic-link library-name)
+(dynamic-link))))
+     (lambda (return-value function-name . arguments)
+       (let ((function (dynamic-func function-name shared-object)))
+         (pointer-&gt;procedure return-value function arguments)))))</pre></div>
+<p>That's all folks!</p>
+</div>
+	</div>
+    </body>
+</html>

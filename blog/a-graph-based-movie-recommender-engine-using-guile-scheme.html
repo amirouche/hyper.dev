@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2018/01/01 - A Graph-Based Movie Recommender Engine Using Guile Scheme</h1>
+<p>The goal of this article is to introduce the <code>grf3</code> graphdb library
+and its graph traversal framework named traversi. To dive into
+traversi, we will implement a small recommender system over the
+movielens dataset.</p>
+<h3>grf3 graphdb library</h3>
+<p><code>grf3</code> is graph database library built on top of an <em>assoc space</em>
+persisted to disk thanks to <a href="http://wiredtiger.com">wiredtiger</a>.</p>
+<h4>Basics</h4>
+<p>Basically you create vertices using <code>(create-vertex assoc)</code> and
+<code>(create-edge start end assoc)</code> where <code>ASSOC</code> must be an alist with
+symbol keys and any serializable scheme value as value. <code>START</code> and
+<code>END</code> must be <code>&lt;vertex&gt;</code> see below. Those procedures will return
+respectively a <code>&lt;vertex&gt;</code> and <code>&lt;edge&gt;</code> record.</p>
+<p>Both <code>&lt;vertex&gt;</code> and <code>&lt;edge&gt;</code> have an assoc and unique identifier named
+<code>uid</code>.  They have sugar syntax to interact with the assoc via
+<code>(vertex-set vertex key value)</code>, <code>(vertex-ref vertex key)</code>, <code>(edge-set
+edge key value)</code> and <code>(edge-ref edge key)</code>. Mind the fact that <code>-set</code>
+procedures have no <code>!</code> at the end which means they return a new
+record.</p>
+<p><code>&lt;edge&gt;</code> has two specific procedure called <code>edge-start</code> and <code>edge-end</code>
+which will return the unique identifier the start vertex and
+respectively the end vertex.</p>
+<p><code>(get uid)</code> will return a <code>&lt;vertex&gt;</code> or <code>&lt;edge&gt;</code> with <code>UID</code> as unique
+identifier.</p>
+<p><code>(save vertex-or-edge)</code> will persist changes done to a vertex or edge.</p>
+<p>That is all for the basics of the <code>grf3</code> library. If you experiment a
+little with the library in the REPL you will notice that the <code>assoc</code>
+associated with <code>&lt;vertex&gt;</code> and <code>&lt;edge&gt;</code> contains more than what you
+put in it. NEVER change the keys that starts with <code>%</code> char or the
+database will break.</p>
+<h4>traversi stream framework</h4>
+<p><em>traversi</em> is a port of Tinkerop's Gremlin to scheme using streams
+implemented using delayed lambda evaluation. This does not use srfi-41
+because srfi-41 is slower.</p>
+<p>The API is similar to srfi-41:</p>
+<ul>
+<li><code>(list-&gt;traversi lst)</code></li>
+<li><code>(traversi-&gt;list lst)</code></li>
+<li><code>(traversi-car traversi)</code></li>
+<li><code>(traversi-cdr traversi)</code></li>
+<li><code>(traversi-map proc traversi)</code></li>
+<li><code>(traversi-for-each proc traversi)</code></li>
+<li><code>(traversi-filter proc traversi)</code></li>
+<li><code>(traversi-backtrack traversi)</code> will backtrack to the value
+that produce the current value by the previous call to
+<code>traversi-map</code>.</li>
+<li><code>(traversi-take count traversi)</code></li>
+<li><code>(traversi-drop count traversi)</code></li>
+<li><code>(traversi-length traversi)</code></li>
+<li><code>(traversi-scatter traversi)</code> takes a traversi of lists (where each
+value of the stream is a list) and convert all the thing to single
+traversi composed of the value containes in the lists of the stream.</li>
+<li><code>(traversi-unique traversi)</code> keep only on occurence of each value.</li>
+<li><code>(traversi-group-count traversi)</code> return an alist with the count of
+each value.</li>
+</ul>
+<h3>helpers</h3>
+<p>Here is a few helpers:</p>
+<ul>
+<li><code>(vertices)</code> return a traversi made of all the vertex <strong>uids</strong> found
+in the database</li>
+<li><code>(edges)</code> return a traversi made of all the edge <strong>uids</strong> found in
+the database</li>
+<li><code>(from key value)</code> return elements which the value associated with
+<code>KEY</code> is <code>equal?</code> to <code>VALUE</code></li>
+<li><code>((where? key value) uid)</code> predicate procedure which will return
+<code>#true</code> if the element <code>UID</code> has <code>VALUE</code> as <code>KEY</code>.</li>
+<li><code>((key name) uid)</code> return the value of <code>KEY</code> for the element which
+has <code>UID</code> as unique identifier.</li>
+<li><code>((key? name value) uid)</code> predicate procedure which will return
+<code>#true</code> if the element which has <code>UID</code> as unique identifier has a
+<code>(name . value)</code> pair in its assoc.</li>
+<li><code>(incomings uid)</code> return a list made of the <em>incoming edges</em> of the
+element <code>UID</code>. <code>UID</code> must be the identifier of a vertex. If <code>UID</code> is
+the identifier of an edge it will return an empty list (except if
+the database is broken).</li>
+<li><code>(outgoings uid)</code> return a list made of the <em>outgoings edges</em> of the
+element <code>UID</code>. <code>UID</code> must be the identifier of a vertex. If <code>UID</code> is
+the identifier of an edge it will return an empty list (except if
+the database is broken).</li>
+<li><code>(start uid)</code> if <code>UID</code> is the identifier of an edge return the edge's
+<em>start node</em>. Otherwise the behavior is not specified.</li>
+<li><code>(end uid)</code> if <code>UID</code> is the identifier of an edge return the edge's
+<em>end node</em>. Otherwise the behavior is not specified.</li>
+</ul>
+<p>Last but not least, there is <code>(get-or-create-vertex key value)</code> which
+will create a vertex with <code>((key . value))</code> if there is not vertex
+with such a pair or return the existing vertex otherwise.</p>
+<h2>Using a graphdb to do recommendation</h2>
+<p>Now we will put this all together to movie recommendations.</p>
+<h3>Getting started</h3>
+<p>First you need a bit of setup.</p>
+<p>Clone the culturia repository using the following command:</p>
+<div class="highlight"><pre><span></span>&gt; git clone https://github.com/amirouche/Culturia
+</pre></div>
+<p>Rendez vous inside the <code>src</code> directory, create a <code>data</code> directory and
+inside that directory download the movielens small dataset and
+decompress the archive:</p>
+<div class="highlight"><pre><span></span>&gt; <span class="nb">cd</span> Culturia/src
+&gt; mkdir data
+&gt; wget http://files.grouplens.org/datasets/movielens/ml-latest-small.zip
+&gt; unzip ml-latest-small.zip
+</pre></div>
+<p>Go back the <code>src</code> directory, create a <code>/tmp/wt</code> directory, study a
+little the <code>movielens-step00-load.scm</code> file using your favorite editor
+emacs and fire guile to load the dataset as <code>grf3</code> database:</p>
+<div class="highlight"><pre><span></span>&gt; <span class="nb">cd</span> ..
+&gt; mkdir /tmp/wt
+&gt; emacs movielens-step00-load.scm <span class="p">&amp;</span>
+&gt; guile -L . movielens-step00-load.scm
+....
+</pre></div>
+<p>Loading will take a few minutes.</p>
+<p>To understand the graph traversal you need to know how the graph is
+drawn. There is three kinds of vertices:</p>
+<ul>
+<li>movie vertices have a <code>'movie</code> label, <code>'movie/id</code> and a <code>'movie/title</code></li>
+<li>genre vertices have a <code>'genre</code> label and a <code>genre/title</code>.</li>
+<li>user vertices have a <code>user</code> label and a <code>'user/id</code></li>
+</ul>
+<p>There is two kinds of edges:</p>
+<ul>
+<li>edges starting at movies, which connects to a genre vertex labeled
+as <code>'part-of</code></li>
+<li>edges starting at users, which connects to a movie vertex labeled as
+<code>rating</code>. They also have a <code>rating/value</code> integer value.</li>
+</ul>
+<p>Here is a schema of the graph mapping:</p>
+<p><img src="movielens.png" alt="graphdb mapping"></p>
+<p>Fire guile REPL and import all the things:</p>
+<div class="highlight"><pre><span></span>&gt; guile -L .
+GNU Guile <span class="m">2</span>.1.3
+Copyright <span class="o">(</span>C<span class="o">)</span> <span class="m">1995</span>-2016 Free Software Foundation, Inc.
+
+Guile comes with ABSOLUTELY NO WARRANTY<span class="p">;</span> <span class="k">for</span> details <span class="nb">type</span> <span class="sb">`</span>,show w<span class="s1">&#39;.</span>
+<span class="s1">This program is free software, and you are welcome to redistribute it</span>
+<span class="s1">under certain conditions; type `,show c&#39;</span> <span class="k">for</span> details.
+
+Enter <span class="sb">`</span>,help<span class="err">&#39;</span> <span class="k">for</span> help.
+scheme@<span class="o">(</span>guile-user<span class="o">)</span>&gt; <span class="o">(</span>use-modules <span class="o">(</span>ukv<span class="o">)</span> <span class="o">(</span>grf3<span class="o">)</span> <span class="o">(</span>wiredtigerz<span class="o">)</span> <span class="o">(</span>wiredtiger<span class="o">)</span> <span class="o">(</span>ice-9 receive<span class="o">)</span> <span class="o">(</span>srfi srfi-26<span class="o">))</span>
+</pre></div>
+<p>Open an environment over the <code>/tmp/wt</code> directory:</p>
+<div class="highlight"><pre><span></span><span class="nv">scheme@</span><span class="p">(</span><span class="nf">guile-user</span><span class="p">)</span><span class="nv">&gt;</span> <span class="p">(</span><span class="k">define </span><span class="nv">env</span> <span class="p">(</span><span class="nf">env-open*</span> <span class="s">&quot;/tmp/wt&quot;</span> <span class="p">(</span><span class="nb">list </span><span class="nv">*ukv*</span><span class="p">)))</span>
+</pre></div>
+<p>You are ready!</p>
+<h3>Forward</h3>
+<p>First we would like to know which movie has the id <code>1</code>:</p>
+<div class="highlight"><pre><span></span><span class="nv">scheme@</span><span class="p">(</span><span class="nf">guile-user</span><span class="p">)</span><span class="nv">&gt;</span> <span class="p">(</span><span class="nf">with-context</span> <span class="nv">env</span> <span class="p">(</span><span class="nf">traversi-for-each</span> <span class="nv">pk</span> <span class="p">(</span><span class="nf">traversi-map</span> <span class="nv">get</span> <span class="p">(</span><span class="nf">from</span> <span class="ss">&#39;movie/id</span> <span class="mi">1</span><span class="p">))))</span>
+
+<span class="c1">;;; (#&lt;&lt;vertex&gt; uid: &quot;V6HM7CEX&quot; assoc: ((movie/title . &quot;Toy Story (1995)&quot;) (movie/id . 1) (%kind . 0))&gt;)</span>
+</pre></div>
+<p>Remember that every time you access the database in the REPL you need
+to wrap the call using <code>with-context</code>. This is also the prefered way
+to work with <code>grf3</code> in modules.</p>
+<p>Now let's see what genres is <em>Toy Story</em>:</p>
+<div class="highlight"><pre><span></span><span class="nv">scheme@</span><span class="p">(</span><span class="nf">guile-user</span><span class="p">)</span><span class="nv">&gt;</span> <span class="p">(</span><span class="nf">with-context</span> <span class="nv">env</span> <span class="p">(</span><span class="nf">traversi-for-each</span> <span class="nv">pk</span> <span class="p">(</span><span class="nf">traversi-map</span> <span class="p">(</span><span class="nf">key</span> <span class="ss">&#39;genre</span><span class="p">)</span> <span class="p">(</span><span class="nf">traversi-map</span> <span class="nv">end</span> <span class="p">(</span><span class="nf">traversi-filter</span> <span class="p">(</span><span class="nf">key?</span> <span class="ss">&#39;label</span> <span class="ss">&#39;part-of</span><span class="p">)</span> <span class="p">(</span><span class="nf">traversi-scatter</span> <span class="p">(</span><span class="nf">traversi-map</span> <span class="nv">outgoings</span> <span class="p">(</span><span class="nf">from</span> <span class="ss">&#39;movie/id</span> <span class="mi">1</span><span class="p">))))))))</span>
+
+<span class="c1">;;; (&quot;Fantasy&quot;)</span>
+
+<span class="c1">;;; (&quot;Animation&quot;)</span>
+
+<span class="c1">;;; (&quot;Children&quot;)</span>
+
+<span class="c1">;;; (&quot;Comedy&quot;)</span>
+
+<span class="c1">;;; (&quot;Adventure&quot;)</span>
+</pre></div>
+<p>Seems good to me. Mind the <code>traversi-scatter</code> it used just after
+<code>(traversi-map outgoings ...)</code> this is pattern that you will see very
+often.</p>
+<p>Now let's do something more complex. We would like to know which movies
+are liked by the same people that liked <em>Toy Story</em>.</p>
+<p>Remember that compose must be read from right to left, which means
+in this case bottom-up:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">users-who-scored-high</span> <span class="nv">movie/id</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">with-context</span> <span class="nv">env</span>
+   <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">query</span> <span class="p">(</span><span class="nf">compose</span>
+          <span class="c1">;; fetch the start vertex ie. users</span>
+          <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-map</span> <span class="nv">start</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+          <span class="c1">;; backtrack to edge uids</span>
+          <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-backtrack</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+          <span class="c1">;; keep values that are &lt;= 5.0</span>
+          <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-filter</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="mf">4.0</span> <span class="nv">x</span><span class="p">))</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+          <span class="c1">;; fetch the &#39;rating/value of each edge</span>
+          <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-map</span> <span class="p">(</span><span class="nf">key</span> <span class="ss">&#39;rating/value</span><span class="p">)</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+          <span class="c1">;; keep edges which have &#39;rating as &#39;label</span>
+          <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-filter</span> <span class="p">(</span><span class="nf">key?</span> <span class="ss">&#39;label</span> <span class="ss">&#39;rating</span><span class="p">)</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+          <span class="c1">;; scatter...</span>
+          <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-scatter</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+          <span class="c1">;; fetch all incomings edges</span>
+          <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-map</span> <span class="nv">incomings</span> <span class="nv">&lt;&gt;</span><span class="p">))))</span>
+      <span class="p">(</span><span class="nf">traversi-&gt;list</span> <span class="p">(</span><span class="nf">query</span> <span class="p">(</span><span class="nf">from</span> <span class="ss">&#39;movie/id</span> <span class="mi">1</span><span class="p">))))))</span>
+</pre></div>
+<p>This is not very useful since we don't know the users, but the final
+result might be more interesting because we might now the movies (or
+at least we can STFW).</p>
+<p>As an exercise check that the uids that were fetched are really user
+vertex.</p>
+<p>Now will check the users likes and <em>group-count</em> to see if it makes
+sens:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">users-top-likes</span> <span class="nv">users</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">with-context</span> <span class="nv">env</span>
+    <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">query</span> <span class="p">(</span><span class="nf">compose</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-group-count</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="c1">;; retrieve movie vertex&#39;s title</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-map</span> <span class="p">(</span><span class="nf">key</span> <span class="ss">&#39;movie/title</span><span class="p">)</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-map</span> <span class="nv">end</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="c1">;; retrieve rating edges with a score of at least 4.0</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-backtrack</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-filter</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="mf">4.0</span> <span class="nv">x</span><span class="p">))</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-map</span> <span class="p">(</span><span class="nf">key</span> <span class="ss">&#39;rating/value</span><span class="p">)</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-filter</span> <span class="p">(</span><span class="nf">key?</span> <span class="ss">&#39;label</span> <span class="ss">&#39;rating</span><span class="p">)</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-scatter</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">traversi-map</span> <span class="nv">outgoings</span> <span class="nv">&lt;&gt;</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nf">cut</span> <span class="nv">list-&gt;traversi</span> <span class="nv">&lt;&gt;</span><span class="p">))))</span>
+      <span class="p">(</span><span class="nf">list-head</span> <span class="p">(</span><span class="nf">query</span> <span class="nv">users</span><span class="p">)</span> <span class="mi">10</span><span class="p">))))</span>
+</pre></div>
+<p>The above algorithm is available in the
+<code>culturia/src/movielens-step01-recommend.scm</code> file.</p>
+<p>See by yourself!</p>
+</div>
+	</div>
+    </body>
+</html>

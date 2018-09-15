@@ -141,8 +141,6 @@ input[type="submit"]:hover {
 #root > div > * {
     margin: auto;
     max-width: 666px;
-    display: flex;
-    flex-direction: column;
 }
 
 #root > div > div {
@@ -165,4 +163,9 @@ input[type="submit"]:hover {
 
 #root > div > h1, #root > div > h2, #root > div > h3, #root > div > h4, #root > div > h5, #root > div > h6 {
     margin-top: 15px;
+}
+
+
+#root.index ul > li {
+    padding: 5px;
 }

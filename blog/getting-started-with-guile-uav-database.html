@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2016/01/01 - Getting started with guile UAV database</h1>
+<p>UAV database is a tuple space database that is easy to use and easy to
+grasp. There is also a database server that allows to query the database
+from multiple processus.</p>
+<p>We will get started by using the database directly without the database
+server illustrated with an music album collection kind of stuff and then
+will open the road to use the database server.</p>
+<p>You can fetch the lasted version of UAV database using git:</p>
+
+<div><pre>git clone https://framagit.org/a-guile-mind/guile-wiredtiger.git</pre></div>
+<h3>UAV Tuple Space</h3>
+<p>What is the tuple space? It's table with three columns.</p>
+<p>In what follows we consider the following assoc:</p>
+
+<div><pre>(define lagale-lagale
+    '((artist . "La Gale")
+      (title . "La Gale")
+      (year . 2012)))</pre></div>
+<h4>Give me a <code>U</code></h4>
+<p>The first column <code>U</code> stands for <em>unique identifier</em>. it's a random
+string assigned the first time you add an assoc to the database. A
+single assoc is represented with several rows in the table but share
+the same identifier.</p>
+<h4>Give me a <code>A</code></h4>
+<p><code>A</code> stands for <em>attribute name</em>. In the above example it's <code>title</code> and
+<code>year</code>. In this case attributes are symbols but can be any scheme
+value that can be serialized with <code>write</code>.</p>
+<h4>Give me a <code>V</code></h4>
+<p>The last column is <code>V</code> for <em>value</em>. It can be any scheme value that
+can be serialized with <code>write</code>.</p>
+<h4>Wrapping up</h4>
+<p>If we add <code>lagale-lagale</code> to the database, and the assigned unique
+identifier is <code>ABCDE</code>, the database will more or less look like the
+following:</p>
+
+<div><pre>uid  |  attribute |   value
+  =======+============+===========
+   ABCDE |   artist   | "La Gale"
+  -------+------------+-----------
+   ABCDE |   title    | "La Gale"
+  -------+------------+-----------
+   ABCDE |    year    |   2012</pre></div>
+<h3>API</h3>
+<p>Fire an REPL inside the wiredtiger directory using the following command:</p>
+
+<div><pre>wiredtiger $ guile -L .</pre></div>
+<h4>Open the database</h4>
+<p>And load the <code>uav</code> module with:</p>
+
+<div><pre>(use-modules (uav))</pre></div>
+<p>To get started you need to open database:</p>
+
+<div><pre>(define connexion (uav-open* "/tmp/"))</pre></div>
+<h4>Add a document to the database</h4>
+<p>To add a document to the database you simply format you data into an
+assoc and use uav-add!:</p>
+
+<div><pre>(define uid (uav-add! '((artist . "La Gale")
+                        (title . "La Gale")
+                        (year . 2012))))</pre></div>
+<h4>Debug the database</h4>
+<p>There is a debug procedure that allows to have a pick at the
+underlying schema.  Using <code>uav-debug</code> you will get something like the
+following:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-debug)
+
+;;; (key ("DZI3P5MU" "artist"))
+
+;;; (value ("\"La Gale\""))
+
+;;; (key ("DZI3P5MU" "title"))
+
+;;; (value ("\"La Gale\""))
+
+;;; (key ("DZI3P5MU" "year"))
+
+;;; (value ("2012"))</pre></div>
+<h4>Referencing a document</h4>
+<p>Now you can use <code>uav-ref*</code> to retrieve the document using its <code>uid</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-ref* uid)
+$3 = ((year . 2012) (title . "La Gale") (artist . "La Gale"))</pre></div>
+<h4>Update a document</h4>
+<p>We assigned previously the identifier of <em>La Gale</em> album to <code>uid</code>.</p>
+<p>We can with this information update the document with <code>uav-update!</code>.
+The thing to keep in mind is that this procedure updates the whole
+document so you need first to retrieve the original assoc, update
+the assoc and commit the new version using <code>uav-update!</code>.</p>
+<p>For instance, let's add the <em>genre</em> to the assoc:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-ref* uid)
+$6 = ((year . 2012) (title . "La Gale") (artist . "La Gale"))
+scheme@(guile-user)&gt; (acons 'genre "Hip Hop" $3)
+$7 = ((genre . "Hip Hop") (year . 2012) (title . "La Gale") (artist . "La Gale"))
+scheme@(guile-user)&gt; (uav-update! uid $7)
+scheme@(guile-user)&gt; (uav-ref* uid)
+$8 = ((year . 2012) (title . "La Gale") (genre . "Hip Hop") (artist . "La Gale"))</pre></div>
+<p>Let's check the output of <code>uav-debug</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-debug)
+
+;;; (key ("DZI3P5MU" "artist"))
+
+;;; (value ("\"La Gale\""))
+
+;;; (key ("DZI3P5MU" "genre"))
+
+;;; (value ("\"Hip Hop\""))
+
+;;; (key ("DZI3P5MU" "title"))
+
+;;; (value ("\"La Gale\""))
+
+;;; (key ("DZI3P5MU" "year"))
+
+;;; (value ("2012"))</pre></div>
+<p>There is a new key/value pair with a <code>genre</code> attribute associated with
+<code>"Hip Hop</code>.</p>
+<h4>How to delete a document</h4>
+<p>To delete a document you simply use <code>(uav-del! uid)</code> procedure:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-del! uid)
+scheme@(guile-user)&gt; (uav-debug)
+scheme@(guile-user)&gt;</pre></div>
+<p>As you can see <code>uav-debug</code> displays nothing, the database is empty!</p>
+<h4>attribute-value index reference</h4>
+<p>You can retrieve document using <em>attribute-value</em> association. Otherwise
+said, you can retrieve every document that has a given attribute/value pair
+in its assoc.</p>
+<p>Let re-add <code>lagale-lagale</code> to the database an try to retrieve it by year:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-add! '((artist . "La Gale")
+                                 (title . "La Gale")
+                                 (year . 2012)))</pre></div>
+<p>Let's add another album</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-add! '((artist . "La Gale")
+                                 (title . "Salem City Rocker")
+                                 (year . 2015)))</pre></div>
+<p>Let's add the album of another artist:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-add! '((artist . "Mighz")
+                                 (title . "Equilibre")
+                                 (year . 2015)))</pre></div>
+<p>Now it's funny enough to query the database! Let's try <code>uav-index-ref</code>:</p>
+
+<div><pre>scheme@(guile-user)&gt; (uav-index-ref 'year 2012)
+$16 = ("3UTO7NW0")
+scheme@(guile-user)&gt; (uav-index-ref 'year 2015)
+$17 = ("WCKA2IWH" "PQVA9NBB")</pre></div>
+<p>That's all folks!</p>
+</div>
+	</div>
+    </body>
+</html>

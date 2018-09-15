@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2017/01/01 - En avant le web avec Python 3</h1>
+<p>A l'approche de la <a href="https://www.pycon.fr/2017/">pycon france 2017</a> (à
+Toulouse (du 21 au 24 Septembre)). Je reflechissait à proposer une
+présentation de <a href="https://docs.python.org/3/library/asyncio.html"><code>asyncio</code></a>
+ou <a href="https://aiohttp.readthedocs.io/">aiohttp</a>. La solution proposer par
+les developpeurs de CPython pour faire du dev asynchrone.</p>
+<p>Aussi je me suis dit qu'avant de faire ça se serait bien de faire le
+point sur papier numerique pour voir si ce que j'avais à dire était
+assez interessant.</p>
+<p>Pour dire vrai, je ne suis pas developpeur CPython, ni <code>aiohttp</code> et je
+pense pas avoir assez de billes pour faire une conf uniquement sur
+ça. Donc voilà ma reflexion sur le sujet du developpement web en
+Python.</p>
+<h2>Kesako la programmation asynchrone?</h2>
+<p>A vrai dire, on s'en fou! Tout ce qu'on peut garder à l'esprit c'est
+que c'est plus facile de traiter beaucoup de clients avec.</p>
+<h2>Kesako <code>asyncio</code> ?</h2>
+<p><code>asyncio</code> est une bibliothèque (de programmation asynchrone) qui vise
+à tirer partie de la nouvelle syntaxe <code>async</code> et <code>await</code> introduit
+dans la <a href="https://www.python.org/dev/peps/pep-0492/">PEP 492</a>.</p>
+<p>On connaissait déjà la programmation asynchrone en Python 2 grace à
+twisted et son framework
+web <a href="https://en.wikipedia.org/wiki/Nevow">Nevow</a> utilisant les
+callbacks. On peut resumer l'experience twisted au points suivants:</p>
+<ul>
+<li>Python c'est bien</li>
+<li>Les callbacks caymal</li>
+</ul>
+<p><code>asyncio</code> s'inspire de twisted mais utilise dans son incarnation en
+Python 3.5 les mots clefs <code>async</code> et <code>await</code> qui permettent la
+programmation asynchrones sans callbacks! Et c'est pour ça qu'on peux
+mettre de coté toutes les subtilités de la programmation asynchrone
+dans la majorité des cas (et c'est pourquoi on s'en fou au final que
+se soit asynchrone).</p>
+<p>Un code python 3.5+ ressemblera à un code python 2, saupoudré des
+mots-clefs <code>async</code> et <code>await</code>.</p>
+<h2>Kesako <code>async</code> et <code>await</code> ?</h2>
+<p><code>async</code> et <code>await</code> c'est des nouveaux mots-clefs du langage Python.</p>
+<p>Dans <code>asyncio</code> si une fonction est declaré comme <code>async</code> alors <code>await</code>
+peut apparaitre à l'interieur de cette fonction. <code>async</code> est utilisé
+dans <code>asyncio</code> pour declarer une fonction asynchrone. <code>await</code> est
+utilisé pour appeller une fonction asynchrone. Typiquement votre code
+va ressembler à quelque chose comme ça:</p>
+<div class="highlight"><pre><span></span><span class="n">async</span> <span class="k">def</span> <span class="nf">ma_fonction_asynchrone</span><span class="p">():</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">await</span> <span class="n">une_autre_fonction_asynchrone</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">out</span>
+</pre></div>
+<p>Mais j'ai dit qu'on en avait rien à faire de la programmation
+asynchrone?! C'est là en quelque sorte que l'abstraction au dessus des
+callbacks <strong>leak</strong> de façon controllé. Mais c'est pas grave, car
+l'utilisation de ces mot-clefs est clairement identifiés et fait
+partie de l'API des bibliothèques qui utilisent <code>asyncio</code>. Suffit de
+faire ce qui est marqué dans la doc!</p>
+<p>Derrière toussa, il y a un protocole (comme le protocole des itérables
+utilisé pour faire fonctionner les boucles <code>for</code>). Jetez un oeil à
+la <a href="https://www.python.org/dev/peps/pep-0492/">PEP 492</a> si vous voulez
+en savoir plus. Mais sachez que c'est pas la peine de lire et
+comprendre ce document pour utiliser <code>asyncio</code>.  J'en suis la preuve
+vivante.</p>
+<p>En fait, <code>async</code> et <code>await</code> sont uniquement là pour rendre la
+programmation asynchrone explicite et donc plus facile à
+maintenir. Cela permet de savoir en un coup d'oeil si une fonction (ou
+méthode...) peut etre interrompue et où elle pourra etre
+interrompue... Cela dit c'est pas vraiment la peine de s'en soucier
+dans une première approche de la programmation asynchrone qui se
+limite à l'utilisation des bibliothèques existantes.</p>
+<p>Pour pas vous laisser desoeuvré fasse à cette nebuleuse asynchrone, je
+rajouterai juste que ça deviens interessant de savoir quand une
+fonction peut-etre interrompue quand plusieurs flux d'execution
+accèdent à la meme ressource. Autrement dit, c'est un usage avancé
+(sauf si vous creez vous meme des globales (ou autres valeurs
+partagées) dans votre programme (accessible en ecriture (si les
+globales sont accessibles en lecture uniquement cela ne pose pas de
+problème))).</p>
+<p><strong>En gros</strong>, il suffit de savoir que vous serez obligé de marquer les
+fonctions asynchrones comme <code>async</code> et utiliser <code>await</code> pour les
+appeller comme dit dans la doc. Et c'est tout!</p>
+<h2>Kesako <code>aiohttp</code></h2>
+<p><code>aiohttp</code> est un cadre de developpement web qui inclus:</p>
+<ul>
+<li>un serveur et un client HTTP classique</li>
+<li>un serveur et un client WebSocket qui peut participer à la boucle
+d'évènement que le serveur HTTP classique. C'est à dire qu'un meme
+executable peut servir les client HTTP et websocket et partager les
+ressources tel que les connections à la base de donnée. Et comme
+c'est un seul programme on peut programmer salement!</li>
+<li>un mecanisme de routage à la Django et Flask basé sur les regex qui
+supporte
+les
+<a href="http://aiohttp.readthedocs.io/en/stable/web.html#nested-applications">applications recursives</a>.</li>
+</ul>
+<p>Et c'est tout et c'est déjà pas mal je trouve. D'autre bibliothèques
+viennent completer ce framework (un peu comme dans l'écosystème Flask)
+cette base et fournissent connections à la base de donnée à travers
+SQLAlchemy (ou pas!) ou meme
+une
+<a href="https://github.com/argaen/aiocache">abstraction aux systèmes de cache REDIS ou memcached</a></p>
+<p>Contrairement à un avis repandu ça ressemble beaucoup à du code python
+2 classique à la Django ou Python saupoudrer de <code>async</code>/<code>await</code>. Ça
+change des habitudes et c'est plus relou que la fonction <code>print</code> en
+terme de reflexe (surtout que les erreurs sont pas toujours clairs, en
+tout cas en Python 3.5.3).</p>
+<p>Le seul cas qui peux arriver avec aiohttp qui n'arrive jamais en
+python 2 synchrone c'est
+l'<a href="https://github.com/aio-libs/aiohttp/issues/2098">annulation d'une coroutine</a> et
+donc du controlleur d'une requête. Ce qui peux poser problème si par
+exemple on met à jour à la fois la base de donnée et le cache ou si on
+<strong>n</strong>'utilise <strong>pas</strong> de transactions ou si on fait de l'autocommit...</p>
+<h2><code>aiohttp</code> vs. Django vs. Flask</h2>
+<p>Je vais pas mentir, le gros souci par rapport aux approches synchrones
+(lire Django et Flask) c'est le manque d'utilisateurs et du coup y a
+moins de bibliothèques prêtes à etre utiliser ou on trouve encore des
+bugs... Mais c'est pas comme si les applications Django étaient sans
+bugs...</p>
+<p><code>aiohttp</code> c'est un peu comme flask (avec le support des websocket dans
+le même thread en plus), il y a pas d'ORM par défault, pas de
+framework de formulaire par défaut etc... Donc un peu comme en
+Javascript il faut avoir des idées sur comment monter un cadre
+logiciel complet.</p>
+<p>J'ai commencer le dev avec Django est je trouvai ça super simple, la
+doc est clair (et maintenant en plus en français) et des centaines
+d'applications pour démarrer son projet rapidement et à vrai dire je
+recommanderai encore d'utiliser Django (plutôt que Flask ou <code>aiohttp</code>)
+pour prototyper (sauf si on a besoin de websocket).</p>
+<p>Après le stade du prototype, Django et Flask c'est pas le top.</p>
+<p>Apparemment les performances sont moins bonnes, à vérifier.</p>
+<p>Mais en plus les choix qui sont fait sont pas toujours geniaux:</p>
+<ul>
+<li><p>Je trouve qu'utiliser un ORM c'est se tirer une balle dans le pied,
+par exemple le problème
+des
+<a href="https://stackoverflow.com/questions/97197/what-is-n1-select-query-issue">requêtes N+1</a>.
+J'ai cru au début que l'ORM m'éviterai d'apprendre le
+SQL. Faux. Déjà il faut apprendre comment fonctionne l'ORM (aurevoir
+SQLAlchemy). Ensuite il est encore nécessaire de comprendre le SQL
+pour analyser les requêtes générer par l'ORM. Donc au final,
+pourquoi ne pas simplement utiliser le SQL qui est enseigné de base
+dans toutes les formations que je connais.</p>
+</li>
+<li><p>L'utilisation massive des globales (apps, url router, template, database
+connection, requete...) ce qui rend le code imbitable cf. dans
+Flask
+cf. <a href="https://github.com/pallets/flask/blob/master/flask/ctx.py"><code>ctx.py</code></a> et
+<a href="https://github.com/pallets/flask/blob/master/flask/globals.py"><code>globals.py</code></a> ou
+<a href="https://docs.djangoproject.com/fr/1.11/topics/db/multi-db/">dans Django la gestion de plusieurs bases de données</a>.</p>
+</li>
+<li><p>Mélanger la validation des données et le rendu, c'est bien dans le cadre
+d'un prototype et ça s’arrête là.</p>
+</li>
+</ul>
+<p>Là je me fourvoie peut-être, mais la dernière fois que j'ai regarder
+il y a deux ans, le support des apps dans Django n'était pas
+suffisant.  Disons que je créer une application pour vendre du pain
+bio. Je met en place la partie métier spécifique kivabien:</p>
+<div class="highlight"><pre><span></span><span class="n">painbio</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">Application</span><span class="p">()</span>
+
+<span class="n">business</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">Application</span><span class="p">()</span>
+
+<span class="c1"># ajouter les routes kivonbien</span>
+<span class="n">business</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;POST&#39;</span><span class="p">,</span> <span class="s1">&#39;/command&#39;</span><span class="p">,</span> <span class="n">handle_command</span><span class="p">)</span>
+<span class="n">business</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;/receipt/{id}/&#39;</span><span class="p">,</span> <span class="n">handle_receipt</span><span class="p">)</span>
+
+<span class="n">painbio</span><span class="o">.</span><span class="n">add_subapp</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">business</span><span class="p">)</span>
+</pre></div>
+<p>Maintenant, je souhaite ajouter un petit blog à mon application pour
+faire de la propagande. En Django, ce n'est pas aussi simple que:</p>
+
+<div><pre>blog = nerfed.Blog()
+painbio.add_subapp('/blog', blog)</pre></div>
+<p>En Django, il faut ajouter toutes les app dependantes une par une dans
+le bon ordre pour que ça marche dans le <code>settings.py</code> en passant par
+une indirection sous forme de chaine de caractères. C'est un peu
+dommage.  Alors qu'avec <code>aiohttp</code>, on a un début de réponse convenable
+avec
+les
+<a href="http://aiohttp.readthedocs.io/en/stable/web.html#nested-applications">applications recursives</a>.</p>
+<p>Avec toussa on pourrai ajouter que Django channels va ressoudre le
+problème de riches tel que les
+websockets,
+<a href="http://channels.readthedocs.io/en/stable/index.html">voyez vous meme</a>,
+c'est pas simple, pas accessible tout sauf la philosphie Python.</p>
+<h2>CQFD</h2>
+<p>Je vais continuer à travailler sur mon <em>nouveau</em>
+projet <a href="https://github.com/amirouche/socialite">socialite</a> et au final
+faire quelque chose en me basant sur ce travail l'an prochain, ce qui
+je pense aura plus d’intérêt.</p>
+<blockquote><p>Note: 2018/02/11, en fait ça m'étonnerai que je libère du temps pour
+faire quoi que se soit en Python sur mon temps libre.</p>
+</blockquote>
+<h2>Et demain ?</h2>
+<p>Python dans ton browser?!</p>
+<p><a href="https://www.journalduhacker.net/s/otns6m/en_avant_le_web_avec_python">Commentaires sur le journal du hacker</a></p>
+</div>
+	</div>
+    </body>
+</html>

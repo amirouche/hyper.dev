@@ -20,7 +20,7 @@
 	</div>
 	<div id="root">
 	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
-	    <div><h1>2017/03/01 - Do It Yourself: a Graph Database in Python</h1>
+	    <div><h1>2016/01/01 - Do It Yourself: a graph database in Python</h1>
 <p>You maybe already know that I am crazy about graph databases. I am
 trying to build a graph database in Python. Which graphdb? Well this
 is a moving target. The following design is a good for small databases
@@ -36,23 +36,23 @@ on a schema I call the TupleSpace.</p>
 <h3>What is the Tuple Space</h3>
 <p>The idea behind tuple space is to store a set of tuples inside a
 single table that look like the following:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;title&quot;</span><span class="o">,</span> <span class="s">&quot;Building a python graphdb in one night&quot;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;body&quot;</span><span class="o">,</span> <span class="s">&quot;You maybe already know that I am...&quot;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;publishedat&quot;</span><span class="o">,</span> <span class="s">&quot;2015-08-23&quot;</span><span class="p">)</span>
 
-<span class="p">(</span><span class="mi">2</span><span class="o">,</span> <span class="s">&quot;name&quot;</span><span class="o">,</span> <span class="s">&quot;database&quot;</span><span class="p">)</span>
+<div><pre>(1, "title", "Building a python graphdb in one night")
+(1, "body", "You maybe already know that I am...")
+(1, "publishedat", "2015-08-23")
 
-<span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="s">&quot;start&quot;</span><span class="o">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="s">&quot;end&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="p">)</span>
+(2, "name", "database")
 
-<span class="o">...</span>
+(3, "start", 1)
+(3, "end", 2)
 
-<span class="p">(</span><span class="mi">4</span><span class="o">,</span> <span class="s">&quot;title&quot;</span><span class="o">,</span> <span class="s">&quot;key/value store key composition&quot;</span><span class="p">)</span>
+...
 
-<span class="o">...</span>
+(4, "title", "key/value store key composition")
 
-<span class="p">(</span><span class="mi">42</span><span class="o">,</span> <span class="s">&quot;title&quot;</span><span class="o">,</span> <span class="s">&quot;building a graphdb with HappyBase&quot;</span><span class="p">)</span>
-</pre></div>
+...
+
+(42, "title", "building a graphdb with HappyBase")</pre></div>
 <p>The tuple can be described as (identifier, key, value).</p>
 <p>If you study the above example you will discover that both edges
 (aka. ManyToMany relations) are represented using the same tuple
@@ -63,30 +63,30 @@ reader ;)</p>
 <p>The first section describe the API of the TupleSpace, following section describe how the TupleSpace is implemented on the storage.</p>
 <h4>API</h4>
 <p>The API provided by the tuple space is document oriented instead of tuple oriented. It looks like the following:</p>
-<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TupleSpace</span><span class="p">:</span>
 
-    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return all tuples with the given uid&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
+<div><pre>class TupleSpace:
 
-    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">**</span><span class="n">properties</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add the tuples formed with key/value pairs</span>
-<span class="sd">           taken from `properties` and `uid`&quot;&quot;&quot;</span>
-       <span class="k">pass</span>
+    def get(self, uid):
+        """Return all tuples with the given uid"""
+        pass
 
-    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Delete tuples with `uid`&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
+    def add(self, uid, **properties):
+        """Add the tuples formed with key/value pairs
+           taken from `properties` and `uid`"""
+       pass
 
-    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Iterate the index for tuples having `key` and</span>
-<span class="sd">           optionaly `value`&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
-</pre></div>
+    def delete(self, uid):
+        """Delete tuples with `uid`"""
+        pass
+
+    def query(self, key, value=''):
+        """Iterate the index for tuples having `key` and
+           optionaly `value`"""
+        pass</pre></div>
 <h4>Schema</h4>
 <p>To implement the above schema inside an ordered key/value store we have to find a relevant key. That key I think, is the composition of the identifier and name. This leads to definition of the following table Key:</p>
-<div class="highlight"><pre><span></span><span class="n">Key</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-</pre></div>
+
+<div><pre>Key(identifier, name) -&gt; Value(value)</pre></div>
 <p>Every Key is unique and is associated with a Value. Given the fact that the store is ordered one can easily retrieve every (key, value) tuple associated with a given identifier by going through the the ordered key space.</p>
 <p>The above tuple space will look like the following in the key/value database; using a high level view ie. not bytes view:</p>
 
@@ -117,19 +117,19 @@ Colunms| identifier |  name       |                 value
 <p>The simple case of positive integers is solved by struct.pack('&gt;Q', number).</p>
 <p>The solution to support all numbers is to always use the same packing schema whatever the sign and whether they are float or not.</p>
 <p>Here is a naive packing function that support every Python objects, keeps the ordering of strings and positive integers where integers comes before strings which come before other kind of Python values:</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__pack</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;1&#39;</span> <span class="o">+</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;q&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">unicode</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;2&#39;</span> <span class="o">+</span> <span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;3&#39;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s1">&#39;4&#39;</span> <span class="o">+</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;q&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span> <span class="o">+</span> <span class="n">data</span>
-    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">__pack</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
-</pre></div>
+
+<div><pre>def pack(*values):
+    def __pack(value):
+        if type(value) is int:
+            return '1' + struct.pack('&gt;q', value)
+        elif type(value) is unicode:
+            return '2' + value.encode('utf-8') + '\0'
+        elif type(value) is str:
+            return '3' + value + '\0'
+        else:
+            data = dumps(value, encoding='utf-8')
+            return '4' + struct.pack('&gt;q', len(data)) + data
+    return ''.join(map(__pack, values))</pre></div>
 <p>In database that is column aware it's not always required to build
 such packing function as the database already has way to compose key
 as columns.</p>

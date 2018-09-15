@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2018/01/01 - Je suis une bande éthic à moi tout seul</h1>
+<p>C'est pas juste que j'ai du cœur à l'ouvrage, sans sens apparat à
+apparaitre aux après de celles et ceux qui revaient d'une enigme,
+c'est ma passion.</p>
+<p>Ce que j'ai fait comme contribution libre en 2017.</p>
+<h2>Python</h2>
+<h3>Combinatorix</h3>
+<p>J'ai crée une bibliothèque pour écrire des parsers par composition de
+fonctions. Au lieu de parser une grammaire, dans le cadre des parseur
+par combinaison la grammaire c'est le code!
+Vive <a href="https://github.com/amirouche/combinatorix">combinatorix</a>!
+Contrairement à d'autres implementations, il n'est pas
+monadic... enfin pas à ma conaissance.</p>
+<h3>BeyondJS</h3>
+<p>J'ai fait un prototype d'un framework inspiré de feu nevow qui permet
+d'écrire des applications web sans passer par une ligne de javascript
+et sans fichier HTML externe à l'aide d'une API dont je suis très fier
+mais que j'ai completement pompé sur nevow. C'est pas exactement nevow
+non plus car il utise pas twisted, mais aiohttp. Aussi, il est encore
+moins utile (bien que possible) d'écrire du javascript pour faire des
+trucs un peu kikoo. Spoiler, ça utilise un virtual dom.  La
+connaissance de les API web (cf. <a href="http://mdn.io/">MDN</a> est encore
+requise. <a href="https://github.com/amirouche/beyondjs">Lisez le code sur github</a>!</p>
+<h3>Socialite</h3>
+<p>J'ai essayé de me lancer dans un gros projet mais j'ai juste integrer
+deux trois bibliothèques ensemble pour que ça ressemble à quelque
+chose d'utilisable proche de ce que fourni le monolithe Django. Ça
+utilise ReactJS. Y a pas grand chose, mais ça m'a value quelques forks
+et
+étoiles. <a href="https://github.com/amirouche/xp-socialite">Be social, star it</a>!</p>
+<h3>maji</h3>
+<p>Je sais pas pourquoi j'ai fait
+ça. Désolé. <a href="https://github.com/amirouche/xp-maji">https://github.com/amirouche/xp-maji</a></p>
+<h2>Scheme</h2>
+<h3>scheme-todomvc</h3>
+<p>C'est mon plus gros succès de l'année! C'est la
+fameuse
+<a href="https://github.com/amirouche/scheme-todomvc">todo app adapté en scheme</a> à
+l'aide de snabbdom et inspiré de la version de Elm sans les
+signaux. Il y a d'autres versions du "framework" que j'utilise pour
+faire ça que je préfére à cette version. Mais cette version est la
+plus présentable. Le coeur du truc (inspiré de Elm) est plus
+testable. Ce que je retiens de cette experience, c'est que le Scheme à
+travers le Scheme XML (aka. SXML) est très compétitif par rapport à JSX.</p>
+<h3>guile javascript backend</h3>
+<p>Suite au GSoC de <a href="http://shift-reset.com/">Ian Price</a> qui visaient
+à adapter le backend JavaScript au nouveau code du compilateur de
+Guile, j'ai corrigés deux ou trois bugs et j'ai rendu possible
+d'appeller du JavaScript depuis Guile et du Guile depuis JavaScript.
+Y a des morceaux du truc du scheme-todomvc la dedans. Malheureusement,
+les navigateurs modernes (!) ne supportent toujours pas l'optimisation
+des recurences terminales qui est pourtant dans le standard, donc en
+gros c'est pas utilisable
+jusqu'à
+<a href="https://kangax.github.io/compat-table/es6/#test-proper_tail_calls_(tail_call_optimisation">nouvel ordre</a>)
+(ou rappel l'ordre ;)).</p>
+<p>Le code est
+sur
+<a href="https://gitlab.com/amirouche/guile/commits/compile-to-js-2017">gitlab.com</a> cette
+fois.</p>
+<h3>guile-termbox</h3>
+<p>J'ai crée
+des
+<a href="https://github.com/a-guile-mind/azul.scm">bindings pour la superbe lib termbox</a> (je
+recommende
+<a href="https://github.com/deathlyfrantic/termbox/tree/truecolor">ce fork</a>
+des vraies couleurs :) et un petit editeur de texte tout rikiki en
+guise de documentation.</p>
+<h3>Culturia</h3>
+<p>J'ai pas un, ni deux mais quatre repository culturia, le dernier se trouve
+chez <a href="https://framagit.org/a-guile-mind/culturia.next">framagit</a>. Je sais
+plus précisement ce que je veux faire. Et le terme pompeux c'est <a href="https://en.wikipedia.org/wiki/Personal_knowledge_base">Personal
+Knowledge Base</a>.</p>
+<h2>Autres</h2>
+<p>J'ai passé la barre des 3000 points sur stackoverflow et j'ai
+écrit
+<a href="https://github.com/amirouche/full-stack-challenge">un challenge full stack</a> que
+personne à ma connaissance n'a reussit. Il y a des étoiles qui se
+perdent...</p>
+</div>
+	</div>
+    </body>
+</html>

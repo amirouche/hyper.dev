@@ -20,7 +20,7 @@
 	</div>
 	<div id="root">
 	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
-	    <div><h1>2017/02/01 - Do It Yourself: a search engine in Scheme Guile</h1>
+	    <div><h1>2017/01/01 - Do It Yourself: a search engine in Scheme Guile</h1>
 <p>Search engines are really funny beast they are a mix of algorithm,
 architecture and other domain knowledge from databases, linguistic,
 machine learning and graph theory.</p>
@@ -77,13 +77,13 @@ tree walk procedure to implement a (for-each-file directory extension
 proc) procedure that will iterate over all files that have EXTENSION
 as extension inside DIRECTORY and execute a procedure PROC which is
 passed the path of a matching file:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">for-each-file</span> <span class="nv">directory</span> <span class="nv">extension</span> <span class="nv">proc</span><span class="p">)</span>
-  <span class="p">(</span><span class="nf">ftw</span> <span class="nv">directory</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">filename</span> <span class="nv">statinfo</span> <span class="nv">flag</span><span class="p">)</span>
-                   <span class="p">(</span><span class="nf">match</span> <span class="nv">flag</span>
-                     <span class="p">(</span><span class="ss">&#39;regular</span> <span class="p">(</span><span class="nf">proc</span> <span class="nv">filename</span><span class="p">)</span>
-                                <span class="no">#t</span><span class="nv">rue</span><span class="p">)</span>
-                     <span class="p">(</span><span class="ss">&#39;directory</span> <span class="no">#t</span><span class="nv">rue</span><span class="p">)))))</span>
-</pre></div>
+
+<div><pre>(define (for-each-file directory extension proc)
+  (ftw directory (lambda (filename statinfo flag)
+                   (match flag
+                     ('regular (proc filename)
+                                #true)
+                     ('directory #true)))))</pre></div>
 <p>I choosed to do pattern matching.</p>
 <p>for-each-file only excutes proc (just like for-each) and doesn't
 return anything useful (like fold or map) so onward we will only think
@@ -99,9 +99,9 @@ matrix the bag of words or simply bag.</p>
 <p>We must read the content of the file and turn it into a scheme string,
 reading file as string is done with (ice-9 rdelim) module. For this
 operation we can simply do:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">file-&gt;string</span> <span class="nv">filepath</span><span class="p">)</span>
-  <span class="p">(</span><span class="nb">call-with-input-file </span><span class="nv">filepath</span> <span class="nv">read-string</span><span class="p">))</span>
-</pre></div>
+
+<div><pre>(define (file-&gt;string filepath)
+  (call-with-input-file filepath read-string))</pre></div>
 <p>Save this procedure it's useful.</p>
 <p>Now we need to 1) lowercase the string so that queries will be case
 insensitive, words of the query will also be lower case. 2) turn the
@@ -110,23 +110,23 @@ adopt a simple approach which works great, most of the time, for
 english by removing punctuation and splitting by space 3) count the
 words and store everything in an association.</p>
 <p>Let's implement 1) and 2) in (string-&gt;tokens text) procedure:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">use-modules</span> <span class="p">(</span><span class="nf">srfi</span> <span class="nv">srfi-26</span><span class="p">))</span> <span class="c1">;; for cut</span>
 
-<span class="p">(</span><span class="k">define </span><span class="nv">punctuation</span> <span class="p">(</span><span class="nb">string-&gt;list </span><span class="s">&quot;!\&quot;#$%&amp;\\&#39;()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~&quot;</span><span class="p">))</span>
+<div><pre>(use-modules (srfi srfi-26)) ;; for cut
 
-<span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">clean</span> <span class="nv">text</span><span class="p">)</span>
-  <span class="s">&quot;Replace punctuation characters from TEXT with a space character&quot;</span>
-  <span class="p">(</span><span class="nf">string-map</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">char</span><span class="p">)</span> <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nf">list-index</span> <span class="nv">punctuation</span> <span class="nv">char</span><span class="p">)</span> <span class="sc">#\space</span> <span class="nv">char</span><span class="p">))</span> <span class="nv">text</span><span class="p">))</span>
+(define punctuation (string-&gt;list "!\"#$%&amp;\\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~"))
 
-<span class="p">(</span><span class="k">define </span><span class="nv">split</span> <span class="p">(</span><span class="nf">cut</span> <span class="nv">string-split</span> <span class="nv">&lt;&gt;</span> <span class="sc">#\space</span><span class="p">))</span>
+(define (clean text)
+  "Replace punctuation characters from TEXT with a space character"
+  (string-map (lambda (char) (if (list-index punctuation char) #\space char)) text))
 
-<span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">sanitize</span> <span class="nv">words</span><span class="p">)</span>
-  <span class="s">&quot;Only keep words that have length bigger than one&quot;</span>
-  <span class="p">(</span><span class="nf">filter</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">word</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt; </span><span class="mi">1</span> <span class="p">(</span><span class="nb">string-length </span><span class="nv">word</span><span class="p">)))</span> <span class="nv">words</span><span class="p">))</span>
+(define split (cut string-split &lt;&gt; #\space))
 
-<span class="c1">;; compose must be read from right to left</span>
-<span class="p">(</span><span class="k">define </span><span class="nv">string-&gt;tokens</span> <span class="p">(</span><span class="nf">compose</span> <span class="nv">sanitize</span> <span class="nv">split</span> <span class="nv">string-downcase</span> <span class="nv">clean</span><span class="p">))</span>
-</pre></div>
+(define (sanitize words)
+  "Only keep words that have length bigger than one"
+  (filter (lambda (word) (&lt; 1 (string-length word))) words))
+
+;; compose must be read from right to left
+(define string-&gt;tokens (compose sanitize split string-downcase clean))</pre></div>
 <p>srfi 26 provides the handy cut form.</p>
 <p>The third steps is to build the bag of words, a mapping between a word
 and the number of time it appears. It's a sparse vector. We use this
@@ -136,41 +136,41 @@ later to match the query against the documents.</p>
 <p>The following procedures takes an association BAG and increment a the
 integer associated with WORD in a persistent way ie. without mutation,
 it creates a new association (no exclamation mark ! as suffix):</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">bag-increment</span> <span class="nv">bag</span> <span class="nv">word</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">count</span> <span class="p">(</span><span class="nf">assoc-ref</span> <span class="nv">bag</span> <span class="nv">word</span><span class="p">)))</span>
-    <span class="p">(</span><span class="k">if </span><span class="nv">count</span>
-        <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">bag</span> <span class="p">(</span><span class="nf">alist-delete</span> <span class="nv">word</span> <span class="nv">bag</span><span class="p">)))</span>
-          <span class="p">(</span><span class="nf">acons</span> <span class="nv">word</span> <span class="p">(</span><span class="mi">1</span><span class="nv">+</span> <span class="nv">count</span><span class="p">)</span> <span class="nv">bag</span><span class="p">))</span>
-        <span class="p">(</span><span class="nf">acons</span> <span class="nv">word</span> <span class="mi">1</span> <span class="nv">bag</span><span class="p">))))</span>
-</pre></div>
+
+<div><pre>(define (bag-increment bag word)
+  (let ((count (assoc-ref bag word)))
+    (if count
+        (let ((bag (alist-delete word bag)))
+          (acons word (1+ count) bag))
+        (acons word 1 bag))))</pre></div>
 <p>Now we will have to use recursive loop thanks to a named let to
 iterate over the words to create the bag of words:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">words-&gt;bag</span> <span class="nv">text</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">let </span><span class="nv">loop</span> <span class="p">((</span><span class="nf">bag</span> <span class="o">&#39;</span><span class="p">())</span>
-             <span class="p">(</span><span class="nf">text</span> <span class="nv">text</span><span class="p">))</span>
-    <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">null? </span><span class="nv">text</span><span class="p">)</span>
-        <span class="nv">bag</span>
-        <span class="p">(</span><span class="nf">loop</span> <span class="p">(</span><span class="nf">bag-increment</span> <span class="nv">bag</span> <span class="p">(</span><span class="nb">car </span><span class="nv">text</span><span class="p">))</span> <span class="p">(</span><span class="nb">cdr </span><span class="nv">text</span><span class="p">)))))</span>
-</pre></div>
+
+<div><pre>(define (words-&gt;bag text)
+  (let loop ((bag '())
+             (text text))
+    (if (null? text)
+        bag
+        (loop (bag-increment bag (car text)) (cdr text)))))</pre></div>
 <p>Check point. The following program:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="nv">tokens</span> <span class="p">(</span><span class="nf">string-&gt;tokens</span> <span class="s">&quot;Janet eat a kiwi! A kiwi!&quot;</span><span class="p">))</span>
-<span class="p">(</span><span class="nf">pk</span> <span class="p">(</span><span class="nf">words-&gt;bag</span> <span class="nv">tokens</span><span class="p">))</span>
-</pre></div>
+
+<div><pre>(define tokens (string-&gt;tokens "Janet eat a kiwi! A kiwi!"))
+(pk (words-&gt;bag tokens))</pre></div>
 <p>Outputs the following:</p>
-<div class="highlight"><pre><span></span><span class="p">((</span><span class="s">&quot;kiwi&quot;</span> <span class="o">.</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="s">&quot;eat&quot;</span> <span class="o">.</span> <span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="s">&quot;janet&quot;</span> <span class="o">.</span> <span class="mi">1</span><span class="p">))</span>
-</pre></div>
+
+<div><pre>(("kiwi" . 2) ("eat" . 1) ("janet" . 1))</pre></div>
 <p>This must be turned into a unit test. Use this template to create one:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">use-modules</span> <span class="p">(</span><span class="nf">srfi</span> <span class="nv">srfi-64</span><span class="p">))</span> <span class="c1">;; unit test framework</span>
 
-<span class="p">(</span><span class="nf">use-modules</span> <span class="p">(</span><span class="nf">artafath</span><span class="p">))</span>
+<div><pre>(use-modules (srfi srfi-64)) ;; unit test framework
+
+(use-modules (artafath))
 
 
-<span class="p">(</span><span class="nf">test-begin</span> <span class="s">&quot;artafath&quot;</span><span class="p">)</span>
+(test-begin "artafath")
 
-<span class="p">(</span><span class="nf">test-group</span> <span class="s">&quot;string-&gt;tokens&quot;</span>
-    <span class="p">(</span><span class="nf">test-equal</span> <span class="s">&quot;integration&quot;</span> <span class="p">(</span><span class="nf">string-&gt;tokens</span> <span class="s">&quot;Janet eat a kiwi! a kiwy!&quot;</span><span class="p">)</span> <span class="o">&#39;</span><span class="p">()))</span>
-<span class="p">(</span><span class="nf">test-end</span> <span class="s">&quot;artafath&quot;</span><span class="p">)</span>
-</pre></div>
+(test-group "string-&gt;tokens"
+    (test-equal "integration" (string-&gt;tokens "Janet eat a kiwi! a kiwy!") '()))
+(test-end "artafath")</pre></div>
 <p>Remains to store the data in wiredtiger and rank a query against the database.</p>
 <p>DIY.</p>
 </div>

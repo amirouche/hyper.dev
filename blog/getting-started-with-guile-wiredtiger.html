@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2016/01/01 - Getting started with guile-wiredtiger</h1>
+<p>guile-wiredtiger is a library binding wiredtiger which is database
+library. I like it because I don't like/master SQL. Other people use
+it to build real databases like mongodb. Myself I've done one or two
+toy projects using it like planetplanet clone.</p>
+<p>wiredtiger is low level compared to a SQL database.</p>
+<p>I can't convince you to use it, but I can show you how it works.</p>
+<h3>Ground zero</h3>
+<p>Download
+<a href="http://source.wiredtiger.com/releases/wiredtiger-2.6.1.tar.bz2">wiredtiger 2.6.1</a>
+and install it using the usual cli dance. Then retrieve wiredtiger
+repository with git:</p>
+
+<div><pre>git clone https://git.framasoft.org/a-guile-mind/guile-wiredtiger.git</pre></div>
+<p>Now go to guile-wiredtiger directory and fire a REPL using the following command:</p>
+
+<div><pre>guile -L .</pre></div>
+<p>Mind the dot.</p>
+<h3>Use wiredtiger</h3>
+<p>Inside the REPL import the wiredtiger module:</p>
+
+<div><pre>scheme@(guile-user)&gt; (use-modules (wiredtiger))</pre></div>
+<h3>Open a connection</h3>
+<p>Open a connection against a directory say /tmp/wt:</p>
+
+<div><pre>scheme@(guile-user)&gt; (mkdir "/tmp/wt")
+scheme@(guile-user)&gt; (define connection (connection-open "/tmp/wt" "create"))</pre></div>
+<p>It's always safe to open a connection against a directory using the create argument even if there is already a database inside that directory.</p>
+<p>a <connection> is thread-safe.</p>
+<h3>Open a session</h3>
+<p>To jump to using the database you have to open a session:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define session (session-open connection))</pre></div>
+<p>a <session> is not thread-safe.</p>
+<h3>Create a table</h3>
+<p>wiredtiger is nosql but has a concept of table. It's a two columns
+layout with sub-columns. The first master column is the key. The
+second master column is the value.</p>
+<p>This dichotomy is useful because the table is automatically ordered
+using the what is stored in the key.</p>
+<p>Let's create simple table with a single string sub-column key, and a
+single string sub-column value. Yes, columns are typed. Without
+further addo:</p>
+
+<div><pre>scheme@(guile-user)&gt; (session-create session "table:kv" "key_format=S,value_format=S,columns=(k,v)")</pre></div>
+<p>It's safe to session-create a table even if it already exists in the database.</p>
+<p>Here we created a table named kv as specified above. The key
+sub-column is named k and the value sub-column is named v.</p>
+<p>Naming columns is optional but required if you want to build indices.
+Create an index</p>
+<p>To create an index we use the same session-create procedure with
+another configuration string.</p>
+<p>Say, we want to invert k sub-column with v sub-column ie. create an
+index table where the key single sub-column is v from kv table. We can
+use the following command:</p>
+
+<div><pre>scheme@(guile-user)&gt; (session-create session "index:kv:inverse" "columns=(v)")</pre></div>
+<p>This instruct wiredtiger to add a row to index:kv:inverse table
+everytime a row is added to table:kv where the key single column
+content is the content of the column named v in table:kv row.</p>
+<p>The index is always synchronized with the reference table for updates,
+deletes and inserts.</p>
+<h3>Getting started with cursors</h3>
+<h4>Insert</h4>
+<p>A <cursor> is the way to search, navigate, insert and update a
+table. This is also used to search and navigate index tables.</p>
+<p>Let's open a <cursor> on table:kv:</p>
+
+<div><pre>scheme@(guile-user)&gt; (define cursor (cursor-open session "table:kv"))</pre></div>
+<p>Let's add a record ie. a key/value pair inside the table:</p>
+
+<div><pre>scheme@(guile-user)&gt; (cursor-key-set cursor "key")
+$4 = 0
+scheme@(guile-user)&gt; (cursor-value-set cursor "value")
+$5 = 0
+scheme@(guile-user)&gt; (cursor-insert cursor)
+$6 = #t</pre></div>
+<p>This is bit involving for our simple case of single sub-columns configuration. Define a procedure to add a record with a single procedure:</p>
+
+<div><pre>(define (cursor-insert* cursor key value)
+  (cursor-key-set cursor key)
+  (cursor-value-set cursor value)
+  (cursor-insert cursor))</pre></div>
+<p>And put it to good use:</p>
+
+<div><pre>scheme@(guile-user)&gt; (cursor-insert* cursor "another" "record"))
+$7 = #t
+scheme@(guile-user)&gt; (cursor-insert* cursor "something" "else")
+$8 = #t</pre></div>
+<h4>Search</h4>
+<p>To look into the table, you also have to use the wiredtiger primitive cursor-key-set followed by cursor-search or cursor-search-near.</p>
+<p>For instance, we can do:</p>
+
+<div><pre>scheme@(guile-user)&gt; (cursor-key-set cursor "key")
+$10 = 0
+scheme@(guile-user)&gt; (cursor-search cursor)
+$11 = #t
+scheme@(guile-user)&gt; (cursor-value-ref cursor)
+$12 = ("value")</pre></div>
+<p>The return value of cursor-value-ref is a list because there might be
+several sub-columns in a master column. Similarly cursor-key-ref
+returns a list:</p>
+
+<div><pre>scheme@(guile-user)&gt; (cursor-key-ref cursor)
+$13 = ("key")</pre></div>
+<p>Unsuprisingly this returns key because the cursor was positioned at
+that key using search. This is not a relevant call to do after
+cursor-search because cursor-search does an exact match of the key or
+match nothing. This is not the case of cursor-search-near which use
+some heuristic to find the nearest key. We will study this, but first
+let's define cursor-search-near star:</p>
+
+<div><pre>(define (cursor-search-near* cursor key)
+  (cursor-key-set cursor key)
+  (cursor-search-near cursor))</pre></div>
+<p>And try it:</p>
+
+<div><pre>scheme@(guile-user)&gt; (cursor-search-near* cursor "ke")
+$14 = 1
+scheme@(guile-user)&gt; (cursor-key-ref cursor)
+$15 = ("key")</pre></div>
+<p>As you can see cursor-search-near star ie. cursor-search-near returns 1
+instead of true or false like cursor-search. cursor-search-near is
+very useful. I warmly recommend you have a look at its documentation.
+Navigate</p>
+<p>We can verify that the table is correctly ordered. Remember we
+inserted the following keys: key, another and something.</p>
+<p>So in theory we should see them appearing in the alphabetic aka. the
+lexicographic order.</p>
+<p>Let's reset the cursor position and navigate the database:</p>
+
+<div><pre>scheme@(guile-user)&gt; (cursor-reset cursor)
+$21 = #t
+scheme@(guile-user)&gt; (cursor-next cursor)
+$22 = #t
+scheme@(guile-user)&gt; (cursor-key-ref cursor)
+$23 = ("another")
+scheme@(guile-user)&gt; (cursor-next cursor)
+$24 = #t
+scheme@(guile-user)&gt; (cursor-key-ref cursor)
+$25 = ("key")
+scheme@(guile-user)&gt; (cursor-next cursor)
+$26 = #t
+scheme@(guile-user)&gt; (cursor-key-ref cursor)
+$27 = ("something")</pre></div>
+<p>All is good.</p>
+<p>You can also mix cursor-search[-near] with cursor-next and
+cursor-previous. Don't forget to read wiredtiger error output ;)</p>
+<h4>Remove</h4>
+<p>To remove a record, just set cursor's key content, an remove it using cursor-remove:</p>
+
+<div><pre>scheme@(guile-user) [1]&gt; (cursor-key-set cursor "key")
+$28 = 0
+scheme@(guile-user) [1]&gt; (cursor-remove cursor)
+$29 = #t</pre></div>
+<p>Let's check that this code, is doing what it's supposed to be doing:</p>
+
+<div><pre>scheme@(guile-user)&gt; (cursor-key-set cursor "key")
+$30 = 0
+scheme@(guile-user)&gt; (cursor-search cursor)
+$31 = #f</pre></div>
+<p>cursor-search returns false, which means the key is not found.</p>
+<p>Try again with cursor-search-near star.</p>
+</div>
+	</div>
+    </body>
+</html>

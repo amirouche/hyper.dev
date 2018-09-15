@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2017/01/01 - Getting Started With State of the Art Frontend Development</h1>
+<p>Nowdays I do a mix of Python system programming and Web UI
+developements using Javascript (scss, backbone, classy, bootstrap).</p>
+<p>I've diven a bit into state of the of the modern way of doing things,
+prolly synonymous of state of the art. There is in my opinion three
+main libraries that fight for the spotlight:</p>
+<ul>
+<li>Angular, which is basically a dead project</li>
+<li>React/Redux, the most popular solution, but
+it's very modular.</li>
+<li>Vue, is kind of inspired from react/redux,
+similarly it's very modular but the development
+is mostly centralized.</li>
+</ul>
+<p>All three of them have a common point which is <code>diff</code>+<code>patch</code>
+algorithms. That algorithm allows to declare the way the html should
+look in its entierity and the algorithm make it happen in the
+rendering graph by updating/remove/adding rendering nodes (which are
+in the case of webdev, most of the time: DOM objects).</p>
+<p>I kept that idea. I created bindings on top of snabbdom.js and
+built what I could build, first getting inspiration from elm
+and redux to come up with the most minimald and most versatile
+framework for building web apps.</p>
+<p>The canvas offered by this framework is summed by the following
+<code>mount</code> procedure:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">mount</span> <span class="nv">container</span> <span class="nv">init</span> <span class="nv">view</span><span class="p">)</span>
+  <span class="s">&quot;Mount in node from the DOM named CONTAINER, the result of the state</span>
+<span class="s">returned by INIT passed to VIEW. VIEW must return pseudo sxml where</span>
+<span class="s">\&quot;on-fu\&quot; attributes (where fu is DOM event name) are associated with</span>
+<span class="s">action lambdas. An action looks like the following:</span>
+
+<span class="s">   (define (button-clicked state spawn)</span>
+<span class="s">     (lambda (event)</span>
+<span class="s">       (+ 1 state)))</span>
+
+<span class="s">In the above STATE is the current state. SPAWN allows to create</span>
+<span class="s">a new green thread. When the action returns the new state, the</span>
+<span class="s">VIEW procedure is called again with the new state.</span>
+
+<span class="s">A minimal VIEW procedure looks like the following:</span>
+
+<span class="s">   (define (view state)</span>
+<span class="s">     `(button (@ (on-click . ,button-clicked)) ,state))</span>
+
+<span class="s">A minimal INIT procedure looks like the following:</span>
+
+<span class="s">   (define (init) 1)</span>
+
+<span class="s">That&#39;s all folks!</span>
+<span class="s">&quot;</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">state</span> <span class="p">(</span><span class="nf">init</span><span class="p">)))</span>  <span class="c1">;; init state</span>
+    <span class="c1">;; create a procedure that allows to create new green threads</span>
+    <span class="p">(</span><span class="k">letrec </span><span class="p">((</span><span class="nf">spawn</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">timeout</span> <span class="nv">proc</span> <span class="nv">args</span><span class="p">)</span>
+                      <span class="p">(</span><span class="nf">set-timeout</span> <span class="p">(</span><span class="k">lambda </span><span class="p">()</span> <span class="p">(</span><span class="nb">apply </span><span class="p">(</span><span class="nf">proc</span> <span class="nv">state</span> <span class="nv">spawn</span><span class="p">)</span> <span class="nv">args</span><span class="p">))</span> <span class="nv">timeout</span><span class="p">)))</span>
+             <span class="c1">;; lambda used to wrap event callback</span>
+             <span class="p">(</span><span class="nf">make-action</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">action</span><span class="p">)</span>
+                            <span class="p">(</span><span class="k">lambda </span><span class="nv">args</span>
+                              <span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">new</span> <span class="p">(</span><span class="nb">apply </span><span class="p">(</span><span class="nf">action</span> <span class="nv">state</span> <span class="nv">spawn</span><span class="p">)</span> <span class="nv">args</span><span class="p">)))</span>
+                                <span class="p">(</span><span class="k">set! </span><span class="nv">state</span> <span class="nv">new</span><span class="p">)</span>
+                                <span class="p">(</span><span class="nf">render</span><span class="p">)))))</span>
+             <span class="c1">;; rendering pipeline</span>
+             <span class="p">(</span><span class="nf">render</span> <span class="p">(</span><span class="k">lambda </span><span class="p">()</span>
+                       <span class="p">(</span><span class="k">set! </span><span class="nv">container</span> <span class="p">(</span><span class="nf">patch</span> <span class="nv">container</span>
+                                              <span class="p">((</span><span class="nf">sxml-&gt;h*</span> <span class="nv">make-action</span><span class="p">)</span> <span class="p">(</span><span class="nf">view</span> <span class="nv">state</span><span class="p">)))))))</span>
+      <span class="p">(</span><span class="nf">render</span><span class="p">))))</span>
+</pre></div>
+<p>Basically, it says that <code>INIT</code> procedure produce a seed state
+passed to <code>VIEW</code> which renders the first version of the graph
+scene. A node from the graph scene fires an event, user specified
+callbacks are which are called action procedures which basically
+takes everything they need to:</p>
+<ul>
+<li>do ajax without blocking using an imperative syntax (via call/cc)</li>
+<li>spawn new green thread</li>
+<li>update the state</li>
+</ul>
+<p>That's where will land the business code.</p>
+<p>The <code>VIEW</code> procedure contains the UI code.</p>
+<p>If you want to know more about this project head over
+the <a href="https://amirouche.github.io/forward.scm/">website</a> or have a look
+at <a href="https://www.youtube.com/watch?v=aC0_Br9KWP4&amp;list=PL_jCPpfzyfeqqEcioz71x5XvXnq9UABdK&amp;index=7">this screencast on youtube</a>.</p>
+</div>
+	</div>
+    </body>
+</html>

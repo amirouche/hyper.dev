@@ -1,4 +1,4 @@
-# 2017/03/01 - Do It Yourself: a Graph Database in Python
+# 2016/01/01 - Do It Yourself: a graph database in Python
 
 You maybe already know that I am crazy about graph databases. I am
 trying to build a graph database in Python. Which graphdb? Well this
@@ -21,7 +21,7 @@ on a schema I call the TupleSpace.
 The idea behind tuple space is to store a set of tuples inside a
 single table that look like the following:
 
-```scheme
+```
 (1, "title", "Building a python graphdb in one night")
 (1, "body", "You maybe already know that I am...")
 (1, "publishedat", "2015-08-23")
@@ -57,7 +57,7 @@ The first section describe the API of the TupleSpace, following section describe
 
 The API provided by the tuple space is document oriented instead of tuple oriented. It looks like the following:
 
-```python
+```
 class TupleSpace:
 
     def get(self, uid):
@@ -83,7 +83,7 @@ class TupleSpace:
 
 To implement the above schema inside an ordered key/value store we have to find a relevant key. That key I think, is the composition of the identifier and name. This leads to definition of the following table Key:
 
-```python
+```
 Key(identifier, name) -> Value(value)
 ```
 
@@ -127,7 +127,7 @@ The solution to support all numbers is to always use the same packing schema wha
 
 Here is a naive packing function that support every Python objects, keeps the ordering of strings and positive integers where integers comes before strings which come before other kind of Python values:
 
-```python
+```
 def pack(*values):
     def __pack(value):
         if type(value) is int:
