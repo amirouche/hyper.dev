@@ -33,7 +33,7 @@ paresseuses à l'aide de routines de controle du flow des programmes
 comme yield en Python et call/cc en Scheme que j'essaye d'aborder dans
 la seconde partie.
 
-```
+```scheme
 (define multiples-of-three
   (let next ((n 3))
     (lambda ()
@@ -63,7 +63,7 @@ avec un contexte différent.
 L'utilisation du let nommé complique les choses en un sens. Voici une
 version qui ne l'utilise pas:
 
-```
+```scheme
 (define (multiples-of-three-rec n)
   (values n (lambda () (multiple-of-three-rec (+ n 3)))))
 
@@ -74,7 +74,7 @@ version qui ne l'utilise pas:
 
 Voici comment cela s'utilise:
 
-```
+```scheme
 (use-modules (ice-9 receive))
 
 
@@ -96,7 +96,7 @@ On peux utiliser le même principe en Javascript ou Python. Dans le
 code suivant je présente une implementation de multiples-of-three en
 Javascript:
 
-```
+```javascript
 function multiplesOfThree() {
 
     function next(n) {
@@ -120,7 +120,7 @@ console.log(iter)
 
 Et en Python:
 
-```
+```python
 def multiple_of_three():
 
     def next(n):
@@ -140,7 +140,7 @@ Remarque: les deux langages ont déjà un moyen beaucoup plus simple de
 faire ce genre de chose à l'aide de leur yield respectif, exemple en
 Python:
 
-```
+```python
 def multiple_of_three():
     n = 3
     while True:
@@ -158,7 +158,7 @@ print(generator.next())
 En javascript, avec une version recente de node et le flag --harmony
 cela donne:
 
-```
+```javascript
 function* multiplesOfThree(){
     var n = 3;
     while (true) {
@@ -194,7 +194,7 @@ compilateurs/interpreteur plus compliqués.
 Sans autres formes de procès voilà une procédure permettant
 d'implementer des coroutines:
 
-```
+```scheme
 (define (coroutine routine)
   (let ((current routine)
 	(status 'new))
@@ -224,7 +224,7 @@ de "quitter/revenir" mais plus precisement the continuer sa vie avec
 la continuation elle va l'appeller (avec un argument si sa lui
 chante). Ce comportement de base est illustré dans le code suivant:
 
-```
+```scheme
 (define why (call/cc (lambda (return)
 		       (format #t "love me or leave me!")
 		       (return "I leave!")
@@ -244,7 +244,7 @@ Mon implementation est loin d'être aussi facile à utiliser que le
 yield Python. En effet chaque yield crée une nouvelle continuation et
 donc un nouveau yield cf. second-yield:
 
-```
+```scheme
 (define example-coroutine
   (coroutine (lambda (yield)
 	       (display "coroutine says: HELLO!")

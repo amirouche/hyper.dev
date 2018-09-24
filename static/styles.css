@@ -174,3 +174,15 @@ input[type="submit"]:hover {
     width: 666px;
     margin: auto;
 }
+
+blockquote {
+    padding: 15px;
+    background: hsla(0, 0%, 100%, 0.2);
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+p {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2018/09/24 - Comment on justifie un ORM ?</h1>
+<p>Reponse a l'article de Sam <a href="http://sametmax.com/les-critiques-des-orm-sont-a-cote-de-la-plaque/">Les critiques des ORM sont à côté de la
+plaque</a>.</p>
+<p>Ma position actuel est que les ORM c'est inutile voir dangereux par
+rapport a l'utilisation de SQL. Et que cela ne scale pas du tout au
+gros projet qui doivent etre maintenable et performant.</p>
+<p>Mais d'abord faisont une etude du texte originale.</p>
+<h1>Etude de la plaque</h1>
+<blockquote><p>Rappel: qu’est-ce qu’un ORM ?</p>
+</blockquote>
+<p>Dans cette partie Sam essaye d'expliquer ce qu'est un ORM.
+Il oublie que le principale ORM Python, l'ORM de Django
+fait un pot pourrit de differents patrons:</p>
+<ul>
+<li><p>Object-Relational Mapper a proprement dit qui fait le lien
+entre la base de donnee et le code Python. A vrai dire, dans
+l'usage, c'est surtout le code Python qui indique a la base
+quelle table, quelle colonne avec un type.</p>
+</li>
+<li><p>Observable: le model Django a des methodes qui sont appellees au
+cours du cycle de vie du modele qui permettent en pratique de
+modifier le model pour une raison x ou y. On verra plus tard que
+c'est pas utile, pire c'est dangeureux.</p>
+</li>
+<li><p>Validation: Et oui, il y a une petite astuce, c'est que le ~form~,
+je veux dire le model sait se valider mais juste un peu pas trop,
+car sinon les <code>Form</code> il saurait pas quoi faire.</p>
+</li>
+<li><p>Facade: il abstrait le langage de requete SQL a travers le tandem
+<code>QuerySet</code> et bien sur son manager.</p>
+</li>
+</ul>
+<p>Aussi, ce qu'on appelle vulgairement un ORM, gere les migrations
+automagiquement.</p>
+<blockquote><p>Tout est ecrit en Python</p>
+</blockquote>
+<p>Je suis completement d'accord avec cette idee. Je veux ecrire un
+maximum de code en Python. Mais je suis oblige de reconnaitre que ce
+qu'on appelle ORM apporte plus de probleme que de solution.</p>
+<blockquote><p>SQLAlchemy (pour les gros projets)</p>
+</blockquote>
+<p>Voila un petit commentaire facile qui moutonne encore un peu plus le
+public. Mon adage prefere c'est les problemes simples doivent etre
+simple a resoudre et les problemes compliques possible. Ce qui n'est
+pas le cas de SQAlechemy la derniere fois que je l'ai utilise. En
+effet, le cout de mise en place fait que vous voulez pas utiliser cela
+dans un petit projet. Une API qui part dans tous les sens fait que
+vous vous y retrouvez jamais ni dans la documentation, ni dans les
+blogs qui ventent ses merites.</p>
+<blockquote><p>Que reproche-t-on aux ORM ?</p>
+</blockquote>
+<p>Je suis d'accord avec les elements de reponses apportes par Sam dans
+cette section.</p>
+<blockquote><p>Heu?</p>
+</blockquote>
+<p>Demarre la critique qui visent a convaincre que les ORM c'est bien.</p>
+<p>L'argumentation est mal construire a mon sens mais les arguments sont
+interessants.</p>
+<blockquote><p>Les ORM ne servent pas à éviter d’écrire du SQL. Ça, c’est vaguement
+un effet de bord.</p>
+</blockquote>
+<p>Malheureusement, c'est comme cela comme presente au premier abord les
+ORM. Et c'est principalement pour cela qu'on les utilisent. C'est
+une tentative de moutonage.</p>
+<blockquote><p>Ils servent à créer une API unifiée inspectable, une expérience
+homogène, un point d’entrée unique, un socle de référence explicite
+et central, pour le modèle de données.</p>
+</blockquote>
+<p>L'abstraction universelle en un seul mot pour gerer vos data.</p>
+<p>Prenons un part un les arguments:</p>
+<ul>
+<li><p>API unifiée: entre plusieurs bases de donnee, mais comme il en parle
+pas plus les gens ne saurons pas que personne ou presque n'utilise
+cette fonctionalite des ORM qui permet de passer d'une base a une
+autre avec moins de douleurs. D'ailleurs, il ecrit plus tot que SQL
+fait deja le taf de ce point de vue la...</p>
+</li>
+<li><p>inspectable: je ne connais pas mysql, mais postgresql est completement
+inspectable en SQL.</p>
+</li>
+<li><p>une experience homogene: il repete le premier argument</p>
+</li>
+<li><p>un point d'entree unique, un socle de référence explicite et
+central, pour le modèle de données: Ici, il dit deux fois la meme
+chose et glisse un mot de passe python bien connu "explicite". En
+quoi le SQL n'est pas explicite? En quoi le fichier de schema n'est
+pas un point d'entree unique? Au contraire avec cette abstraction on
+a l'information duplique dans le code Python et dans la base.</p>
+</li>
+</ul>
+<blockquote><p>Une fois qu’on a passé pas mal de temps à faire des projets...</p>
+</blockquote>
+<p>Ici il met un coup de guitare a la Django. DRY. Application
+re-utilisables.</p>
+<blockquote><p>quelqu’un dans l’équipe va commencer à écrire une abstraction...</p>
+</blockquote>
+<p>C'est ca le truc, l'abstraction, selon moi dont on a besoin est
+tellement simple quelle defit le sens commun.</p>
+<p>Pas besoin d'abstraction complique.</p>
+<p><em>On separe la vue du model ainsi que le controller. On valide les
+entrees dans le controller. On decrit l'acces au model a l'aide du SQL
+dans une petite fonction ou methode.</em></p>
+<p>Et voila!</p>
+<blockquote><p>L’exemple de Django</p>
+</blockquote>
+<p>Apres Sam va continuer a justifier l'interet d'un ORM parce que Django
+c'est bien! Donc l'argument c'est Django == bien donc ORM ==
+bien. Wat!  Un coup de moutonage au passage, il y a plein de projet
+Django donc c'est bien Django.</p>
+<p>Django et son ecosysteme merite un article a proprement parler.</p>
+<p>C'est le moment ou je baisse les bras car l'article est mal construit.
+Au lieu de faire une serie d'argument, couvrir l'argument completement
+et donner un exemple. Ici, il repasse sur certains de ses arguments pour
+faire semblant de les demonter, c'est rigolo.</p>
+<h1>Pas d'ORM, c'est possible</h1>
+<p>Je vais pas vous moutoner en disant un truc du genre regardez comment
+les autres font pour scaler leur Systeme d'Information. C'est uniquement
+des indices. Et encore c'est parfois des fausses pistes.</p>
+<p>Essayez de prendre du recule. Etudier votre code. Oubliez ce que vous
+croyez savoir. Essayez de comprendre les difficultees liees a votre base
+de code.  Tenez un journal des incidents et bugs. Essayez de faire des
+rapprochements entre ces elements.</p>
+<p>Vous arriverez a une meilleur solution qui resoud le probleme que vous
+avez et pas celui que croyais avoir les developpeurs de Django.</p>
+<p>Indice: quand on tourne toujours a gauche et qu'on se rend compte
+qu'on tourne en rond. Qu'est ce qu'on doit faire?</p>
+</div>
+	    <div id="disqus_thread"></div>
+	    <script>
+
+	     var disqus_config = function () {
+		 this.page.url = "https://hyperdev.fr/blog/";
+		 this.page.identifier = this.page.url;
+	     };
+
+	     (function() { // DON'T EDIT BELOW THIS LINE
+		 var d = document, s = d.createElement('script');
+		 s.src = 'https://hyperdev-fr.disqus.com/embed.js';
+		 s.setAttribute('data-timestamp', +new Date());
+		 (d.head || d.body).appendChild(s);
+	     })();
+	    </script>
+	    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+	</div>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-125625648-1"></script>
+	<script>
+	 window.dataLayer = window.dataLayer || [];
+	 function gtag(){dataLayer.push(arguments);}
+	 gtag('js', new Date());
+
+	 gtag('config', 'UA-125625648-1');
+	</script>
+    </body>
+</html>

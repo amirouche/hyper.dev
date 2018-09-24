@@ -77,7 +77,7 @@ wget http://files.grouplens.org/datasets/movielens/ml-latest-small.zip
 
 Une fois decompressé, il faut charger le dataset dans ajgudb à l'aide du script suivant:
 
-```
+```python
 from csv import reader
 
 from ajgudb import AjguDB
@@ -139,7 +139,7 @@ Cette partie est inspiré de «[A graph based movie recommender engine](http://m
 
 Ouvrer une console ipython and ouvrez la base:
 
-```
+```python
 from ajgudb import AjguDB; from ajgudb.gremlin import *; db = AjguDB('db')
 ```
 
@@ -147,13 +147,13 @@ Maintenant nous pouvons laisser s'exprimer toutes la puissance des gremlins.
 
 Récupérons le film Toy Story par exemple:
 
-```
+```python
 movie = db.get(1)
 ```
 
 Pas trop difficille quand on connais déjà l'identifiant. Mais sinon on peut faire:
 
-```
+```python
 movie = db.one(title='Toy Story (1995)')
 ```
 
@@ -161,7 +161,7 @@ movie = db.one(title='Toy Story (1995)')
 
 Pour connaitre la moyenne des notes superieurs à 3 on fait:
 
-```
+```python
 query = db.query(
       incomings,
       select(label='rating'),
@@ -189,7 +189,7 @@ Pas compliqué. Le langage est dynamique vous ne pouvez pas composer n'importe q
 
 Une fois qu'on a filtrer les valeurs des notes on peux revenir sur les arêtes qui ont les notes que l'on veux considerer à l'aide de back. Cette étape retourne avec la selection actuel à l'étape précédente de selection, dans ce cas le select(label='rating'). Ce qui veux dire que dans l'iterateur on va trouver à la place des notes superieur à 3, toutes les arêtes qui ont une note superieur à 3. Pour verifier on peux faire:
 
-```
+```python
 query = db.query(
       incomings,
       select(label='rating'),
@@ -205,7 +205,7 @@ L'étape get récupère les elements (noeuds ou arêtes) référencés dans l'it
 
 Les arêtes de notes vont de l'utilisateur qui a donné la note vers le film noté. Pour récupéré les utilisateurs qui ont données les notes qui ont été selectionné, on ajoute l'étape start à la requete:
 
-```
+```python
 query = db.query(
       incomings,
       select(label='rating'),
@@ -220,7 +220,7 @@ query(movie)
 
 On va stocké la query précédentes dans liked_by comme ça, le code sera plus lisible.
 
-```
+```python
 liked_by = db.query(
          incomings,
          select(label='rating'),
@@ -235,7 +235,7 @@ Remarquez qu'on a retirez le get à la fin.
 
 Maintenant on veux connaitre les films que ces utilisateurs ont bien notés. Ce qui va donner une idée des films à recommender à quelqu'un qui a bien aimé toy story:
 
-```
+```python
 likes = db.query(
       outgoings,
       select(label='rating'),
@@ -257,7 +257,7 @@ l'iterateur. Pour completer cette étape final nous allons d'abord
 récupérer les résultats dans l'ordre des plus courant, derouler la
 liste, en enfin récupérer le titre des films:
 
-```
+```python
 sort = db.query(
     group_count,
     each(lambda g, x: x.most_common()),
@@ -274,7 +274,7 @@ recommender aux gens qui ont aimé Toy Story :)
 
 Le programme complet:
 
-```
+```python
 from ajgudb import AjguDB
 from ajgudb.gremlin import *  # noqa
 

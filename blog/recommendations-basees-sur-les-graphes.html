@@ -81,83 +81,83 @@ ce film».</p>
 
 <div><pre>wget http://files.grouplens.org/datasets/movielens/ml-latest-small.zip</pre></div>
 <p>Une fois decompressé, il faut charger le dataset dans ajgudb à l'aide du script suivant:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">csv</span> <span class="kn">import</span> <span class="n">reader</span>
 
-<div><pre>from csv import reader
-
-from ajgudb import AjguDB
+<span class="kn">from</span> <span class="nn">ajgudb</span> <span class="kn">import</span> <span class="n">AjguDB</span>
 
 
-if __name__ == '__main__':
-    graph = AjguDB('db')
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">AjguDB</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">)</span>
 
-    # create indices
-    print('Starting load of `movies.csv` in `db/`')
-    with open('./movies.csv', 'r') as f:
-        next(reader(f))  # skip heading
-        for id, title, genres in reader(f):
-            props = dict()
-            props['label'] = 'movie'
-            props['id'] = id
-            props['title'] = title
-            movie = graph.vertex(**props)
-            for genre in genres.split('|'):
-                genre = graph.get_or_create(
-                    label='genre',
-                    name=genre
-                )
-                movie.link(genre, label='partof')
+    <span class="c1"># create indices</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `movies.csv` in `db/`&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./movies.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>  <span class="c1"># skip heading</span>
+        <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">genres</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="n">props</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;movie&#39;</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
+            <span class="n">movie</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">vertex</span><span class="p">(</span><span class="o">**</span><span class="n">props</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">genre</span> <span class="ow">in</span> <span class="n">genres</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">):</span>
+                <span class="n">genre</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span>
+                    <span class="n">label</span><span class="o">=</span><span class="s1">&#39;genre&#39;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">genre</span>
+                <span class="p">)</span>
+                <span class="n">movie</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">genre</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;partof&#39;</span><span class="p">)</span>
 
-    print('Starting load of `ratings.csv` in `db/`')
-    with open('./ratings.csv', 'r') as f:
-        next(reader(f))  # skip heading
-        for userid, movieid, value, timestamp in reader(f):
-            # get or create user
-            user = graph.get_or_create(label='user', id=userid)
-            # create edge between movie and user
-            movie = graph.select(label='movie', id=movieid).one()
-            props = dict()
-            props['value'] = int(float(value))
-            props['timestamp'] = int(float(timestamp))
-            rating = user.link(movie, label='rating', **props)
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `ratings.csv` in `db/`&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./ratings.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>  <span class="c1"># skip heading</span>
+        <span class="k">for</span> <span class="n">userid</span><span class="p">,</span> <span class="n">movieid</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">timestamp</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="c1"># get or create user</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">userid</span><span class="p">)</span>
+            <span class="c1"># create edge between movie and user</span>
+            <span class="n">movie</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;movie&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">movieid</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+            <span class="n">props</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">timestamp</span><span class="p">))</span>
+            <span class="n">rating</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">movie</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">props</span><span class="p">)</span>
 
-    print('Starting load of `tags.csv` in `db/`')
-    with open('./tags.csv', 'r') as f:
-        next(reader(f))  # skip heading
-        for userid, movieid, value, timestamp in reader(f):
-            movie = graph.select(label='movie', id=movieid).one()
-            user = graph.select(label='user', id=userid).one()
-            props = dict()
-            props['value'] = value
-            props['timestamp'] = float(timestamp)
-            tag = user.link(movie, label='tag', **props)
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `tags.csv` in `db/`&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./tags.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>  <span class="c1"># skip heading</span>
+        <span class="k">for</span> <span class="n">userid</span><span class="p">,</span> <span class="n">movieid</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">timestamp</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="n">movie</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;movie&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">movieid</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">userid</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+            <span class="n">props</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">movie</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;tag&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">props</span><span class="p">)</span>
 
-    print('closing')
-    graph.close()</pre></div>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;closing&#39;</span><span class="p">)</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
 <p>Ça c'est fait!</p>
 <h3>Recommendation</h3>
 <p>Cette partie est inspiré de «<a href="http://markorodriguez.com/2011/09/22/a-graph-based-movie-recommender-engine/">A graph based movie recommender engine</a>»</p>
 <p>Ouvrer une console ipython and ouvrez la base:</p>
-
-<div><pre>from ajgudb import AjguDB; from ajgudb.gremlin import *; db = AjguDB('db')</pre></div>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ajgudb</span> <span class="kn">import</span> <span class="n">AjguDB</span><span class="p">;</span> <span class="kn">from</span> <span class="nn">ajgudb.gremlin</span> <span class="kn">import</span> <span class="o">*</span><span class="p">;</span> <span class="n">db</span> <span class="o">=</span> <span class="n">AjguDB</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">)</span>
+</pre></div>
 <p>Maintenant nous pouvons laisser s'exprimer toutes la puissance des gremlins.</p>
 <p>Récupérons le film Toy Story par exemple:</p>
-
-<div><pre>movie = db.get(1)</pre></div>
+<div class="highlight"><pre><span></span><span class="n">movie</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
 <p>Pas trop difficille quand on connais déjà l'identifiant. Mais sinon on peut faire:</p>
-
-<div><pre>movie = db.one(title='Toy Story (1995)')</pre></div>
+<div class="highlight"><pre><span></span><span class="n">movie</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">one</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Toy Story (1995)&#39;</span><span class="p">)</span>
+</pre></div>
 <p>Ça c'est fait. A l'occasion on pourra changer de film.</p>
 <p>Pour connaitre la moyenne des notes superieurs à 3 on fait:</p>
-
-<div><pre>query = db.query(
-      incomings,
-      select(label='rating'),
-      key('value'),
-      filter(lambda g, x: x.value &gt; 3),
-      value,
-      mean
-)
-query(movie)</pre></div>
+<div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+      <span class="n">incomings</span><span class="p">,</span>
+      <span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">),</span>
+      <span class="n">key</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span>
+      <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">),</span>
+      <span class="n">value</span><span class="p">,</span>
+      <span class="n">mean</span>
+<span class="p">)</span>
+<span class="n">query</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+</pre></div>
 <p>Ce qui s'est passé:</p>
 <ul>
 <li><p>À partir du film, on a remonté vers les arêtes entrantes à l'aide de incomings</p>
@@ -173,50 +173,50 @@ query(movie)</pre></div>
 </ul>
 <p>Pas compliqué. Le langage est dynamique vous ne pouvez pas composer n'importe quel étape avec n'importe quel autre. Par exemple une fois que vous avez réupérer la valeur contenu dans l'iterateur avec value vous ne pouvez plus remontez dans les resultats avec l'étape back que je prensente dans la suite.</p>
 <p>Une fois qu'on a filtrer les valeurs des notes on peux revenir sur les arêtes qui ont les notes que l'on veux considerer à l'aide de back. Cette étape retourne avec la selection actuel à l'étape précédente de selection, dans ce cas le select(label='rating'). Ce qui veux dire que dans l'iterateur on va trouver à la place des notes superieur à 3, toutes les arêtes qui ont une note superieur à 3. Pour verifier on peux faire:</p>
-
-<div><pre>query = db.query(
-      incomings,
-      select(label='rating'),
-      key('value'),
-      filter(lambda g, x: x.value &gt; 3),
-      back,
-      get
-)
-query(movie)</pre></div>
+<div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+      <span class="n">incomings</span><span class="p">,</span>
+      <span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">),</span>
+      <span class="n">key</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span>
+      <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">),</span>
+      <span class="n">back</span><span class="p">,</span>
+      <span class="n">get</span>
+<span class="p">)</span>
+<span class="n">query</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+</pre></div>
 <p>L'étape get récupère les elements (noeuds ou arêtes) référencés dans l'iterateur et consome l'iterateur. Ce qui veux dire que plus aucune étape n'est possible après get.</p>
 <p>Les arêtes de notes vont de l'utilisateur qui a donné la note vers le film noté. Pour récupéré les utilisateurs qui ont données les notes qui ont été selectionné, on ajoute l'étape start à la requete:</p>
-
-<div><pre>query = db.query(
-      incomings,
-      select(label='rating'),
-      key('value'),
-      filter(lambda g, x: x.value &gt; 3),
-      back,
-      start,
-      get
-)
-query(movie)</pre></div>
+<div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+      <span class="n">incomings</span><span class="p">,</span>
+      <span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">),</span>
+      <span class="n">key</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span>
+      <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">),</span>
+      <span class="n">back</span><span class="p">,</span>
+      <span class="n">start</span><span class="p">,</span>
+      <span class="n">get</span>
+<span class="p">)</span>
+<span class="n">query</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+</pre></div>
 <p>On va stocké la query précédentes dans liked_by comme ça, le code sera plus lisible.</p>
-
-<div><pre>liked_by = db.query(
-         incomings,
-         select(label='rating'),
-         key('value'),
-         filter(lambda g, x: x.value &gt; 3),
-         back,
-         start
-)</pre></div>
+<div class="highlight"><pre><span></span><span class="n">liked_by</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+         <span class="n">incomings</span><span class="p">,</span>
+         <span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">),</span>
+         <span class="n">key</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span>
+         <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">),</span>
+         <span class="n">back</span><span class="p">,</span>
+         <span class="n">start</span>
+<span class="p">)</span>
+</pre></div>
 <p>Remarquez qu'on a retirez le get à la fin.</p>
 <p>Maintenant on veux connaitre les films que ces utilisateurs ont bien notés. Ce qui va donner une idée des films à recommender à quelqu'un qui a bien aimé toy story:</p>
-
-<div><pre>likes = db.query(
-      outgoings,
-      select(label='rating'),
-      key('value'),
-      filter(lambda g, x: x.value &gt; 3),
-      back,
-      end
-)</pre></div>
+<div class="highlight"><pre><span></span><span class="n">likes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+      <span class="n">outgoings</span><span class="p">,</span>
+      <span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">),</span>
+      <span class="n">key</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span>
+      <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">),</span>
+      <span class="n">back</span><span class="p">,</span>
+      <span class="n">end</span>
+<span class="p">)</span>
+</pre></div>
 <p>Si vous lisez bien likes fait le parcours inverse de liked_by.</p>
 <p>Autre chose, la requetes précédentes va forcement retourner les même
 films plusieurs fois. On peux afffiner le resultat on passant par une
@@ -225,58 +225,58 @@ films plusieurs fois. On peux afffiner le resultat on passant par une
 l'iterateur. Pour completer cette étape final nous allons d'abord
 récupérer les résultats dans l'ordre des plus courant, derouler la
 liste, en enfin récupérer le titre des films:</p>
-
-<div><pre>sort = db.query(
-    group_count,
-    each(lambda g, x: x.most_common()),
-    scatter,
-    each(lambda g, x: x.value[0]),
-    key('title'),
-    limit(10),
-    value
-)</pre></div>
+<div class="highlight"><pre><span></span><span class="n">sort</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+    <span class="n">group_count</span><span class="p">,</span>
+    <span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">most_common</span><span class="p">()),</span>
+    <span class="n">scatter</span><span class="p">,</span>
+    <span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="n">key</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">),</span>
+    <span class="n">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="n">value</span>
+<span class="p">)</span>
+</pre></div>
 <p>Sans grande surprise on retrouve Toy Story comme premier film à
 recommender aux gens qui ont aimé Toy Story :)</p>
 <p>Le programme complet:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ajgudb</span> <span class="kn">import</span> <span class="n">AjguDB</span>
+<span class="kn">from</span> <span class="nn">ajgudb.gremlin</span> <span class="kn">import</span> <span class="o">*</span>  <span class="c1"># noqa</span>
 
-<div><pre>from ajgudb import AjguDB
-from ajgudb.gremlin import *  # noqa
+<span class="n">db</span> <span class="o">=</span> <span class="n">AjguDB</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">)</span>
 
-db = AjguDB('db')
+<span class="n">liked_by</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+    <span class="n">incomings</span><span class="p">,</span>
+    <span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">),</span>
+    <span class="n">key</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span>
+    <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="n">back</span><span class="p">,</span>
+    <span class="n">start</span>
+<span class="p">)</span>
 
-liked_by = db.query(
-    incomings,
-    select(label='rating'),
-    key('value'),
-    filter(lambda g, x: x.value &gt; 3),
-    back,
-    start
-)
+<span class="n">likes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+    <span class="n">outgoings</span><span class="p">,</span>
+    <span class="n">select</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">),</span>
+    <span class="n">key</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span>
+    <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="n">back</span><span class="p">,</span>
+    <span class="n">end</span>
+<span class="p">)</span>
 
-likes = db.query(
-    outgoings,
-    select(label='rating'),
-    key('value'),
-    filter(lambda g, x: x.value &gt; 3),
-    back,
-    end
-)
-
-sort = db.query(
-    group_count,
-    each(lambda g, x: x.most_common()),
-    scatter,
-    each(lambda g, x: x.value[0]),
-    key('title'),
-    limit(10),
-    value,
-)
+<span class="n">sort</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+    <span class="n">group_count</span><span class="p">,</span>
+    <span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">most_common</span><span class="p">()),</span>
+    <span class="n">scatter</span><span class="p">,</span>
+    <span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="n">key</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">),</span>
+    <span class="n">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="n">value</span><span class="p">,</span>
+<span class="p">)</span>
 
 
-movie = db.one(title='Toy Story (1995)')
+<span class="n">movie</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">one</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Toy Story (1995)&#39;</span><span class="p">)</span>
 
-for item in sort(likes(liked_by(movie))):
-    print item</pre></div>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sort</span><span class="p">(</span><span class="n">likes</span><span class="p">(</span><span class="n">liked_by</span><span class="p">(</span><span class="n">movie</span><span class="p">))):</span>
+    <span class="k">print</span> <span class="n">item</span>
+</pre></div>
 <p>Et voilà!</p>
 </div>
 	    <div id="disqus_thread"></div>

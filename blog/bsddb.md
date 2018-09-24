@@ -11,7 +11,7 @@ création d'une base de donnée et la création d'index.
 
 Le backend btree est très bien pour créer un index ordonnée.
 
-```
+```python
 import os
 import shutil
 
@@ -98,7 +98,7 @@ assert sorted(values) == all
 Un autre exemple plus parlant qui fait intervenir deux bases de
 données:
 
-```
+```python
 import os
 import shutil
 
@@ -264,7 +264,7 @@ for i in range(3):
 Comme c'est un peu très souvent qu'il faut construire des indexes
 bsddb fournis des routines pour aider:
 
-```
+```python
 import os
 import shutil
 
@@ -460,7 +460,7 @@ assert value is None  # it's not anymore in the secondary index
 Apparament on peux faire du multiprocess avec BerkeleyDB, voilà un
 exemple pas très concluant d'après mes tests:
 
-```
+```python
 #!/usr/bin/env python3
 import os
 from time import sleep
@@ -624,7 +624,7 @@ de façon à pourvoir retrouver tous les documents qui ont une valeur
 donnée pour un champs donnée. Il faut utiliser un curseur, le placer à
 l'aide de cursor.range correctement:
 
-```
+```python
 from collections import namedtuple
 
 
