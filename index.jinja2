@@ -25,6 +25,7 @@
 		    <li><a href="{{ base }}/blog/{{post['filename']}}">{{ post['title'] }}</a></li>
 		{% endfor %}
 	    </ul>
+	    <div id="disqus_thread"></div>
 	    <script>
 	     var disqus_config = function () {
 		 this.page.url = "{{ base }}/blog/";
