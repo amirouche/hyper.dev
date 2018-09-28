@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2018/09/28 - SQL is the ORM killer</h1>
+<p>I think the future of data persistence is
+<a href="http://foundationdb.org/">FoundationDB</a> but I don't want to fight
+several battles at the same time. For the time being, let's tackle a
+pervasive pratice: Object-Relational Mapper. This is so much
+entrenched in programming practice that people don't think about it.
+It's somewhat like Object-Oriented Programming in a multi-paradigm
+language, like, say Python, of course I will use a class! Of course, I
+must use an ORM.</p>
+<p>In this article, I will explain why ORM is a poor pratice.</p>
+<h2>ORM is not a good abstraction</h2>
+<p>In Python, most people know ORM through Django. Django's ORM is a
+<strong>mega</strong> abstraction that try to solve several problems:</p>
+<ol>
+<li><p>The ORM wants to be a class-based Python representation of the
+<em>underlying</em> RDBMS tables.</p>
+</li>
+<li><p>It's also throught it's <code>pre_save</code> and <code>post_save</code> hooks a way to
+enforce some constraints on the data.</p>
+</li>
+<li><p>It's also somekind of facade on top the SQL query language.</p>
+</li>
+<li><p>Abstract differences between several databases</p>
+</li>
+</ol>
+<p>This seems like an anti-pattern on first sight as it does not follow
+the <a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">single responsability
+principle</a>. But
+it's worse than that since I omitted that it also try to validate the
+schema and data. With an ORM you are on your way for god classes that
+break all designs that aim for separation of concerns like
+Model-View-Controller.</p>
+<p>We will kill all those preconceptions and see how they solved problems
+you don't have and worse they hinder progress toward scalable
+applications.</p>
+<h2>Class-based representation doesn't help</h2>
+<p>To get started, but many will see it as minor annoyance, if any, most
+ORM force you to use classes which adds complexity to the code from
+the start.</p>
+<p>Python representation of the database schema is wishful thinking but
+it doesn't deliver in practice.</p>
+<p>First, because of the <a href="https://en.wikipedia.org/wiki/Object-relational_impedance_mismatch">Object-relational impedance
+mismatch</a>.</p>
+<p>Simply said, the structure of the database doesn't map with
+Object-Oriented Programming. In simple cases, for instance tables with
+foreign keys it works, but as soon as you start building a more
+complex data layer (many-to-many relations, table inheritance or
+polymorphic data) you end up with a complicated python representation
+that is actually a breeze to deal with in the database native language
+namely SQL. Not only that, but it is made very easy in Python to shoot
+yourself in the foot because the ORM hides the actual complexity of a
+given query throught its numerous layers like the <a href="https://stackoverflow.com/q/97197/140837"><code>SELECT</code> n +
+1</a>.</p>
+<p>Another tooted advantage of having a Python representation of the
+schema is that you can do introspection. That is nice. Everything
+in the confort of Python metaclass complex architecture. But that is
+not an argument anymore since posgresql has introspection. So the same
+django-admin you all love (meh) can be built with raw pyscopg or
+better <a href="https://github.com/MagicStack/asyncpg">asyncpg</a>. So,
+introspection is not a good argument.</p>
+<p>Some people say, that Python is more readable than SQL. With that I
+heartedly agree if you disregard the complexity required to create
+that readable syntax. That being said, having the schema described in
+Python is not DRY since the schema is also stored in the database.</p>
+<h2>You won't need <code>pre_save</code> and <code>post_save</code></h2>
+<p><code>pre_save</code> and <code>post_save</code> hooks implement, as far as I can tell, some
+kind of observable pattern. That is, you keep an eye on what happens
+on the data and enforce some rules. It is like database triggers but
+done in Python.</p>
+<p>I argue that <code>pre_save</code> and <code>post_save</code> hooks are an
+anti-pattern. Most likely, the code that goes into those should be in
+either a validator or a domain function (if you prefer, read "business
+function"). If you start using <code>pre_save</code> and <code>post_save</code> you are
+hardcoding domain behaviors in the model which leads to god classes
+and ugly <code>if</code>.</p>
+<p>Last but not least, remember that Django is a framework that was meant
+to create an ecosystem of reusable applications. That's why it
+provides hooks and signals. What I want you to notice is that in real
+world scenario where you build an application for yourself, especially
+after the Minimum Viable Product or prototype, you head your way to a
+monolith where you are fully in control. That is completly different
+from the Django use-case where you want Joe to extend Jane's
+application.</p>
+<h2>Embrace the power of SQL</h2>
+<p>The abstraction on top of SQL is moot. That is ORM does not help you
+completly avoid SQL and it gives you more guns to shoot yourself.</p>
+<p>Of course, SQL has another syntax but the ultimate language doesn't
+exists, especially if you plan to deliver something this month. You
+should rather keep thing simple and avoid building too much
+abstraction in order to keep things in control. Using too much
+abstraction, is the best way to see the complexity of your project
+explode.</p>
+<p>My point is an ORM helps to write simple queries but it's not easy to
+write complex queries. Even when you use SQL, you need to fine tune
+your query to best make use of indices. If you use an abstraction on
+top of SQL, you will need to think about the correct SQL and then
+translate that to the correct ORM query incantation.</p>
+<p>I won't go into the Django <code>QuerySet</code> with its manager shenanigans
+because again, it leads to god classes with ugly <code>if</code> and yet another
+time it makes the OOP approach the default choice where <strong>a proper use
+of basic data types and function are good enough.</strong></p>
+<p>The last bit is the same as the first, in the end you will need to
+know SQL to take full advantage of your RDBMS.</p>
+<h2>Conclusion</h2>
+<p>I used to practice (read abuse) a lot Object-Oriented Programming and
+I loved Django ORM and I was impressed by SQLAlchemy. I grew up (read
+learned a lot), and I think I know better. OOP can be useful, god
+objects are not. That's what you will end up with using ORM god
+objects and bad patterns.</p>
+<p>I hope I gave enough elements to answer the question for yourself.  I
+omitted some elements, for instance, when you aim for performance you
+do not want to <code>SELECT * FROM table</code> all the time and that you end up
+with pieces of data that don't map to your <code>Model</code> classes except if
+you build dozens of classes. Of course an ORM haz a <strong>workaround</strong>!
+Or you won't use automagic migration tool in big projects.</p>
+<p>I also did not dive into the issues related to the use of JSON data
+types that is now part of modern postgreSQL. That leads to other
+interesting problem that are partly solved in Object Document Mappers
+aka. ORM for document stores. I have not extensive experience with
+those but my choice will be prolly the same. Stick with the basics,
+see where they are patterns and solve those with carefully choosed
+abstractions.</p>
+<p>Think about it carefully. Known good and somewhat obvious guiding
+principles like "single responsability principle" or "seperation of
+concerns", try to be <strong>systematic</strong>: always solve the problem the same
+way. In particular, ORM are not systematic, simple queries are done
+some way, complex queries are complicated and not explicit...</p>
+<p><em>Caveat emptor</em>!</p>
+</div>
+	    <div id="disqus_thread"></div>
+	    <script>
+	     var disqus_config = function () {
+		 this.page.url = "https://hyperdev.fr/blog/sql-is-the-orm-killer.md";
+		 this.page.identifier = this.page.url;
+	     };
+
+	     (function() { // DON'T EDIT BELOW THIS LINE
+		 var d = document, s = d.createElement('script');
+		 s.src = 'https://hyperdev-fr.disqus.com/embed.js';
+		 s.setAttribute('data-timestamp', +new Date());
+		 (d.head || d.body).appendChild(s);
+	     })();
+	    </script>
+	    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+	</div>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-125625648-1"></script>
+	<script>
+	 window.dataLayer = window.dataLayer || [];
+	 function gtag(){dataLayer.push(arguments);}
+	 gtag('js', new Date());
+
+	 gtag('config', 'UA-125625648-1');
+	</script>
+    </body>
+</html>
