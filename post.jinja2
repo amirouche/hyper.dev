@@ -24,8 +24,8 @@
 	    <div id="disqus_thread"></div>
 	    <script>
 	     var disqus_config = function () {
-		 this.page.url = "{{ base }}/blog/{{ path.name }}";
-		 this.page.identifier = this.page.url;
+		 this.page.url = "{{ base }}/blog/{{ path.name[:-3] }}.html";
+		 this.page.identifier = "{{ base }}/blog/{{ path.name }}";
 	     };
 
 	     (function() { // DON'T EDIT BELOW THIS LINE
