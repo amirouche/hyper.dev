@@ -59,8 +59,6 @@ machine. I still don't have a precise idea how I will handle in terms
 of code the fact that wiredtiger API is blocking. Whereas FDB can be
 asynchronous.
 
-Did I mention that FoundationDB is prolly the future of capitalism?
-
 ## ForwardJS and BeyondJS
 
 When I started `socialiter` I ported the state management routine I
