@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyperdev.fr">hyperdev.fr</a></h1>
+	    <div><h1>2019/02/01 - Comment choisir une base de donnee?</h1>
+<p>Pour choisir une base de donnee vous pouvez vous aidez de StackOverflow
+et du tag <a href="https://stackoverflow.com/questions/tagged/database-design">database-design</a>.</p>
+<p>Dans votre question il est preferable d'apporter des elements de
+reponses en decrivant votre besoin:</p>
+<ol>
+<li>Ganranties: Cela ce definit en remettant en question les differents
+proprietees ACID: Atomic, Consistent, Isolation, Durability. Voir
+la documentation PostgreSQL sur le <a href="https://www.postgresql.org/docs/9.1/transaction-iso.html">controle de la
+concurrence</a>
+ou en autre le <a href="http://source.wiredtiger.com/3.1.0/transactions.html">le chapitre sur les transactions dans
+wiredtiger</a>.
+Voir si <a href="https://en.wikipedia.org/wiki/Eventual_consistency">BASE</a>
+vous convient.</li>
+<li>Taille</li>
+<li>Modele de donnee : A quoi ressemble les donnees. Est ce qu'elles
+sont de formes heterogenes ou bien il y as des types bien
+identifies.</li>
+<li>Workload : Surtout des read, surtout des write, melange ou encore
+write once, then read-only. Ainsi que les types de requetes qui
+vont etre executees: recursive / profondes, colonne / lignes ou par
+proximites.</li>
+</ol>
+</div>
+	    <div id="disqus_thread"></div>
+	    <script>
+	     var disqus_config = function () {
+		 this.page.url = "https://hyperdev.fr/blog/comment-choisir-une-base-de-donnee.html";
+		 this.page.identifier = "https://hyperdev.fr/blog/comment-choisir-une-base-de-donnee.md";
+	     };
+
+	     (function() { // DON'T EDIT BELOW THIS LINE
+		 var d = document, s = d.createElement('script');
+		 s.src = 'https://hyperdev-fr.disqus.com/embed.js';
+		 s.setAttribute('data-timestamp', +new Date());
+		 (d.head || d.body).appendChild(s);
+	     })();
+	    </script>
+	    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+	</div>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-125625648-1"></script>
+	<script>
+	 window.dataLayer = window.dataLayer || [];
+	 function gtag(){dataLayer.push(arguments);}
+	 gtag('js', new Date());
+
+	 gtag('config', 'UA-125625648-1');
+	</script>
+    </body>
+</html>
