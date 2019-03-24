@@ -21,30 +21,6 @@
 	<div id="root">
 	    <h1><a href="{{ base }}">hyperdev.fr</a></h1>
 	    {{ html | safe }}
-	    <div id="disqus_thread"></div>
-	    <script>
-	     var disqus_config = function () {
-		 this.page.url = "{{ base }}/blog/{{ path.name[:-3] }}.html";
-		 this.page.identifier = "{{ base }}/blog/{{ path.name }}";
-	     };
-
-	     (function() { // DON'T EDIT BELOW THIS LINE
-		 var d = document, s = d.createElement('script');
-		 s.src = 'https://hyperdev-fr.disqus.com/embed.js';
-		 s.setAttribute('data-timestamp', +new Date());
-		 (d.head || d.body).appendChild(s);
-	     })();
-	    </script>
-	    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 	</div>
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-125625648-1"></script>
-	<script>
-	 window.dataLayer = window.dataLayer || [];
-	 function gtag(){dataLayer.push(arguments);}
-	 gtag('js', new Date());
-
-	 gtag('config', 'UA-125625648-1');
-	</script>
     </body>
 </html>
