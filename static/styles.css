@@ -18,8 +18,8 @@ html {
 /* BASICS */
 
 body {
-    font-family: sans;
-    font-size: 18px;
+    font-family: 'tex_gyre_pagellaregular', serif;
+    font-size: 24px;
     color: white;
 }
 
@@ -140,7 +140,7 @@ input[type="submit"]:hover {
 
 #root > div > * {
     margin: auto;
-    max-width: 666px;
+    max-width: 888px;
 }
 
 #root > div > div {
@@ -152,7 +152,7 @@ input[type="submit"]:hover {
 }
 
 #root > div > div > pre {
-    width: 666px;
+    width: 888px;
     margin: auto;
 }
 
