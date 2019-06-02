@@ -14,11 +14,19 @@ html {
   box-sizing: inherit;
 }
 
+/* Regular */
+@font-face {
+    font-family: 'EBGaramond';
+    src: url('EBGaramond12-Regular.ttf') format('truetype');
+    font-weight: normal;
+}
+
+
 
 /* BASICS */
 
 body {
-    font-family: 'tex_gyre_pagellaregular', serif;
+    font-family: 'EBGaramond', serif;
     font-size: 24px;
     color: white;
 }
