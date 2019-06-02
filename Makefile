@@ -1,5 +1,5 @@
 all:
-	pipenv run ./maji.py make https://hyperdev.fr
+	pipenv run ./maji.py make https://hyper.dev
 
 dev:
 	pipenv run ./maji.py make http://localhost:8000
