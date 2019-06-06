@@ -4,7 +4,7 @@ C'est pas juste que j'ai du cœur à l'ouvrage, sans sens apparat à
 apparaitre aux après de celles et ceux qui revaient d'une enigme,
 c'est ma passion.
 
-Ce que j'ai fait comme contribution libre en 2018.
+Ce que j'ai fait comme contribution libre en 2018 / 2019.
 
 ## Python
 
