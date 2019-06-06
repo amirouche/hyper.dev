@@ -38,7 +38,7 @@ documentation.  Voir https://github.com/amirouche/ff.js
 
 ## Scheme
 
-### https://scheme-lang.com/cons
+### http://scheme-lang.com/cons
 
 C'est un debut de mise a jour du framework Scheme pour faire du
 frontend qui utilise chibi-scheme compile pour wasm.
