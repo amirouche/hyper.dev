@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/06/12 - On the road to a multi-model database</h1>
+<p>To get a good grasp of what graphdb were, I mocked a graph database
+using Python 2.6's anydbm in a project dubbed <a href="https://pypi.org/project/ajgu/0.1.0/#history">ajgu
+(2010)</a>.</p>
+<p>I created <a href="https://bitbucket.org/amirouche/graphiti-unmaintained/">Graphiti
+(2012)</a> which
+was an Object-Relational Model framework for representing graphical
+data in your favorite Object-Oriented Programming language, namely
+Python. I promise at some point it was working. And I promise, nowdays
+I can code better. That project teached the following lesson:
+embedding the full query language of graphical databases inside Python
+without relying on string interpolation is not possible.</p>
+<p>Given it was not possible to embed nicely another Turing Complete
+language inside Python, I tried to embed Python inside Tinkerpop in
+<a href="https://bitbucket.org/amirouche/java-graphitidb/">GraphitiDB (2013)</a>.
+I promise it was working at some point. To me, that was mostly a
+failure because it was not really possible to send Python queries
+directly from Python code without relying on string interpolation.</p>
+<p>also tried to bind <a href="https://pypi.org/project/Blueprints/#history">Tinkerpop's Blueprints
+(2013)</a> inside
+Python. It was very slow.</p>
+<p>And I figured something else. Using Tinkerpop, unlike with PostgreSQL,
+I had to rely on another database to do full-text search and
+geospatial queries which would break the ACID semantic I was so
+attached to.</p>
+<p>I continued working on ajgu all along. At some point I renamed it
+<a href="https://pypi.org/project/AjguDB/0.1/#history">AjguDB (2015)</a>. This is
+the first version that rely on <a href="https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model">Entity-Attribute-Value Model
+abstraction</a>.
+That inspired the post: <a href="/blog/diy-graph-database-in-python.html">Do-It-Yourself: A Graph Database In
+Python</a>.</p>
+<p>At this point, I knew that building a <strong>database</strong> in Python was bad
+idea [0].  So, I pivoted into an "graph exploration tool" but never
+really executed that idea.</p>
+<p>Along the way, I got lost a little regarding my goal. My initial idea
+was to create a general purpose database that support transactions all
+around.</p>
+<p>For other reasons I learned Scheme programming language. GNU Guile did
+not have a Global Interpreter Lock and performance were better than
+CPython. I continued experimenting with ordered key-value stores.  I
+have written several posts regarding this work:</p>
+<ul>
+<li><a href="/blog/somewhat-relational-database-library-using-wiredtiger.html">Somewhat Relational Database Library Using Wiredtiger (2016)</a></li>
+<li><a href="/blog/getting-started-with-guile-uav-database.html">Getting started with guile UAV database (2016)</a></li>
+<li><a href="/blog/getting-started-with-guile-wiredtiger.html">Getting started with guile-wiredtiger (2016)</a></li>
+<li><a href="/blog/diy-a-search-engine-in-gnu-guile.html">Do It Yourself: a search engine in Scheme Guile (2016)</a></li>
+<li><a href="/blog/a-graph-based-movie-recommender-engine-using-guile-scheme.html">A Graph-Based Movie Recommender Engine Using Guile Scheme (2016)</a></li>
+</ul>
+<p>Since, the beginning I always wrapped inside classes and Python
+objects the abstractions I was building. Somekind of Object-Oriented
+Programming made things, very difficult to interop and compose
+abstractions. To be honest, even the Scheme functional code was not
+easy to compose.</p>
+<p>Even the successor of ajgu, namely
+<a href="https://github.com/amirouche/hoply/">hoply</a> is still broken in this
+regard.</p>
+<p>That is when I FoundationDB was open-sourced that I figured that the
+ordered key-value store doesn't have to be hidden. That is the
+underlying abstraction can leak on purpose because it helps to build
+higher level abstractions, compose them and generaly reach somekind of
+fractal architecture.</p>
+<p>I have put in motion that idea in
+<a href="https://srfi.schemers.org/srfi-167/">SRFI-167</a> with an exampe
+abstraction <a href="https://srfi.schemers.org/srfi-168/">SRFI-168</a> [1].  That
+is, abstractions on top of SRFI-167 shall not hide the ordered
+key-value store and accept <code>prefix</code> to allow to hook it
+somewhere. Also, it should be possible to nest abstractions to be
+fractal. This is not possible in the sample implementation because
+the packing procedure don't support nested datastructures, as of yet.</p>
+<p>So, if you wanted you could build a triple store on top a triple
+store.  That is already a thing and some do n-tuples inside triple
+store. Based, on my analysis this is not great in terms of
+performance.</p>
+<p>Or you could star
+<a href="https://github.com/awesome-data-distribution/datae">datae</a>.</p>
+<p>[0] <a href="https://edgedb.com/">edgedb</a>.</p>
+<p>[1] This is still a work-in-progress and we very recently released
+    another draft. Chime in!</p>
+</div>
+	</div>
+    </body>
+</html>
