@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/06/15 - Functional Database: Versioned Generic Tuple Store</h1>
+<h2>Keywords</h2>
+<ul>
+<li>Database</li>
+<li>Knowledge Base</li>
+<li>Reproducible Science</li>
+<li>Scheme programming language</li>
+<li>Version Control System</li>
+</ul>
+<h2>Summary</h2>
+<p>Versioning in production systems is a trick everybody knows about
+whether it is through backup, logging systems and ad-hoc audit
+trails. It allows to inspect, debug and in worst cases rollback to
+previous states. There is no need to explain the great importance of
+versioning in software management as tools like mercurial, git and
+fossil have shaped modern computing.</p>
+<p>Having the power of multiple branch versioning open the door to
+manyfold applications. It allows to implement a change-request
+mechanic similar to github's pull requests and gitlab's merge requests
+in any domains.</p>
+<p>The change-request mechanic is explicit about the actual human
+workflow in entreprise settings in particular when a senior person
+validates a change by a less senior person.</p>
+<p>Versioning tuples in a direct-acyclic-graph make the implementation of
+such mechanics more systematic and less error prone as the
+implementation can be shared across various tools and organisations.</p>
+<p>Being generic allows downstream applications to fine tune their
+time-space requirements. By incrementing the number of items in a
+tuple, it allows to easily represent provenance or licence. Thus, it
+avoid the need for reification technics as described in
+<a href="http://www.semantic-web-journal.net/content/evaluation-metadata-representations-rdf-stores-0">Frey:2017</a>
+to represent metadata on all tuples.</p>
+<p><a href="https://github.com/awesome-data-distribution/datae">datae</a> is a
+software that takes the path of versioning data in a
+direct-acyclic-graph. It applies the change-request mechanic to
+cooperation around the making of a knowledge base. It is similar in
+spirit to wikidata or freebase.</p>
+<p>Resource Description Framework (RDF) offers a good canvas for
+cooperation around open data but there is no solution that is good
+enough according to
+<a href="https://iris.polito.it/handle/11583/2617308">Canova:2015</a>.  The use
+of a version control system to store open data is a good thing as it
+draws a clear path for reproducible science.</p>
+<p>In projects like <a href="https://datahub.io">datahub.io</a> or
+<a href="https://db.nomics.world/">db.nomics</a>, datae aims to replace the use
+of git.</p>
+<p>datae can make practical cooperation around the creation, publication,
+storage, re-use and maintenance of knowledge base that is possibly
+bigger than memory.</p>
+<p>datae use a novel approach to store tuples that is similar in
+principle to OSTRICH
+<a href="https://rdfostrich.github.io/article-jws2018-ostrich/">Ruben:2018</a> in
+a key-value store. datae use <a href="http://www.wiredtiger.com/">WiredTiger database storage
+engine</a> to deliver a pragmatic versatile
+ACID-compliant versioned generic tuple store.</p>
+<p>datae only stores changes between versions. To resolve conflicts,
+merge commits must copy some changes. datae does not rely on the
+theory of patches introduced by Darcs
+<a href="https://en.wikipedia.org/wiki/Darcs">Tallinn:2005</a>.</p>
+<h2>Current status, and plans for the future</h2>
+<p>This is stil a work-in-progress. You can find the code at <a href="https://git.sr.ht/~amz3/chez-scheme-arew">source
+hut</a>.</p>
+</div>
+	</div>
+    </body>
+</html>
