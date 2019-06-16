@@ -71,7 +71,7 @@ That would be equivalent in the RDBMS to RDF mapping to add a
 
 The **strict** equivalence in RDF would be, instead, to add an
 **item** to every tuple, which is [not yet part of the
-specification](https://github.com/w3c/sparql-12/).
+specification](https://github.com/w3c/sparql-12/issues/98).
 
 Based on that reflexion, one might argue that RDBMS is more powerful
 than RDF or nstore.
