@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/06/16 - Generic Tuple Store</h1>
+<h2>Keywords</h2>
+<ul>
+<li>Database</li>
+<li>Resource Description Framework</li>
+<li>SRFI-168</li>
+</ul>
+<h2>Kesako a tuple store?</h2>
+<p>In <a href="https://srfi.schemers.org/srfi-168/">SRFI-168</a> a tuple store is defined
+as follow:</p>
+<blockquote><p>a tuple store is an ordered set of tuples.</p>
+</blockquote>
+<p>If you prefer, replace "ordered" with "sorted" (I am not sure what is
+the difference). Anyway, the order is the lexicographic order given by
+the bytes packing procedure. That can be summarized as: items of the
+same type are ordered using their natural order. For instance the
+number <code>2</code> is smaller that the number <code>10</code> but the string <code>"2"</code> is
+bigger than <code>"10"</code>.</p>
+<p>The comparison between items of different types is defined but it
+doesn't matter for what is following.</p>
+<h2>Why Generic?</h2>
+<p>As explained in
+<a href="http://www.semantic-web-journal.net/content/evaluation-metadata-representations-rdf-stores-0">Frey:2017</a>
+named graph perform better at metadata representation than other
+strategies. Similarly, nstore excels at representing metadata about
+triples or quads. In general, whenever you need to attach some
+information to all tuples you can add an item to the tuple to do so.</p>
+<p>The canonical Resource Description Framework (RDF) naming of tuple
+items are for triple stores:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">subject</span> <span class="nv">predicate</span> <span class="nv">object</span><span class="p">)</span>
+</pre></div>
+<p>For named graph (ngraph) or quad store you prefix the tuple with
+<code>graph</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">graph</span> <span class="nv">subject</span> <span class="nv">predicate</span> <span class="nv">object</span><span class="p">)</span>
+</pre></div>
+<p>If you come from mongodb world, you will have an easier time with
+the following naming:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">collection</span> <span class="nv">object-id</span> <span class="nv">key</span> <span class="nv">value</span><span class="p">)</span>
+</pre></div>
+<p>If you come from the RDBMS world, you will prefer the following
+naming:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">table</span> <span class="nv">primary-key</span> <span class="nv">column-name</span> <span class="nv">value</span><span class="p">)</span>
+</pre></div>
+<p>It consider that every row as a primiary key, like in google spanner
+<a href="https://ai.google/research/pubs/pub39966"><code>Corbett:2012</code></a> and most
+relational databases I encountered.</p>
+<p>In RDBMS when you need to add information to a row, you add column.
+That would be equivalent in the RDBMS to RDF mapping to add a
+<strong>tuple</strong> to every <code>primary-key</code> from a <code>table</code> with the given
+<code>column-name</code>.</p>
+<p>The <strong>strict</strong> equivalence in RDF would be, instead, to add an
+<strong>item</strong> to every tuple, which is <a href="https://github.com/w3c/sparql-12/">not yet part of the
+specification</a>.</p>
+<p>Based on that reflexion, one might argue that RDBMS is more powerful
+than RDF or nstore.</p>
+<h2>n+1 tuple items</h2>
+<p>To give some food for thought, try to imagine how to represent
+metadata like:</p>
+<ul>
+<li>provenance / source of row values</li>
+<li>license of row values</li>
+<li>history of row values</li>
+</ul>
+<p>Done figuring a good schema for that problems?</p>
+<hr>
+<p>This is difficult.</p>
+<p>There is some prior art, like the
+<a href="https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model">Entity-Attribute-Value</a>
+model that is used in <a href="https://en.wikipedia.org/wiki/Magento">magento
+CRM</a>.</p>
+<p>That example use of EAV model, a triple store, in magento is
+interesting.  Basically, magento try to be "ready" for every possible
+schema by choosing the triple representation. The meme is it has too
+many downsides. I argue that this comes from a time where the problem
+was different. In particular, hard disk is cheaper nowdays. Also,
+event-sourcing architecture has proven that it is completly feasible
+to store a lot of data in a
+<a href="https://en.wikipedia.org/wiki/Single_source_of_truth">Single-Source-Of-Thruth</a>
+that can written to very quickly and expose "views" of that data in
+secondary systems.</p>
+<p>You might think, that representing provenance, license for a single
+value is overkill. But that is problem that wikidata has and almost
+all data science projects should have the same issue if they consider
+reproducibility and quality assurance.</p>
+<p>Also, regarding keeping track of values history, they are known
+audit-trails in the wild. They don't allow time-traveling queries.
+Most of the time, it is not systematic. If you have a new table you
+have to build a new audit-trail table OR rely on EAV model.</p>
+<p>So we are back at triple stores.</p>
+<p>What is nice about a triple store, is that they allow to to represent
+every kind of facts whether it is relational / graphical, tabular or
+documents. And every fact, has its own row. And if you want you can
+reify a given triple to add more facts about it. That what
+<a href="http://www.semantic-web-journal.net/content/evaluation-metadata-representations-rdf-stores-0"><code>Frey:2017</code></a>
+explains. Most of those technics require to do more <strong>join on every
+tuple</strong> to be able to query to fetch the particular information
+(provenance, license, history). nstore avoids those extra joins, as
+the metadata is stored along the rest of the tuple.</p>
+</div>
+	</div>
+    </body>
+</html>
