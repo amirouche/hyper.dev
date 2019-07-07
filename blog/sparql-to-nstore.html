@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/07/07 - SPARQL to Scheme Generic Tuple Store (nstore)</h1>
+<p>SPARQL is Resource Description Framework (RDF) query langauge.  It
+allows to query triple stores and quad stores (called named graph).</p>
+<p>Scheme Generic Tuple Store is work-in-progress Scheme Request For
+Implementation (SRFI) dubbed 168. It embeds a triple store or quad
+store or set of tuples of n items in Scheme programming language.</p>
+<p>It rely on a pattern matching query semantic similar to SPARQL upon
+which minikanren logic language can be bound.</p>
+<p>In the following, I will show how to translate some SPARQL queries
+into Scheme code.</p>
+<p>In what follow we consider the following two stores. A triple store:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="nv">triplesotre</span> <span class="p">(</span><span class="nf">nstore</span> <span class="o">#</span><span class="nv">vu8</span><span class="p">(</span><span class="mi">00</span><span class="p">)</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">subject</span> <span class="nv">predicate</span> <span class="nv">object</span><span class="p">)))</span>
+</pre></div>
+<p>And a quad store:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="nv">quadstore</span> <span class="p">(</span><span class="nf">nstore</span> <span class="p">(</span><span class="o">#</span><span class="nv">vu8</span> <span class="mi">01</span><span class="p">)</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">graph</span> <span class="nv">subject</span> <span class="nv">predicate</span> <span class="nv">object</span><span class="p">)))</span>
+</pre></div>
+<p>And <code>tx</code> is a transaction object.</p>
+<h2>Data Types</h2>
+<p>The supported data types are composition of the follow basic Scheme
+types:</p>
+<ul>
+<li>boolean</li>
+<li>numbers (big integers, float and double)</li>
+<li>symbol</li>
+<li>string</li>
+<li>bytevector</li>
+<li>list (soon)</li>
+<li>vector (soon)</li>
+</ul>
+<p>There is no specific handling of date time objects or URIs.</p>
+<h2>Simple query</h2>
+<h3>SPARQL</h3>
+<div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="nv">?title</span>
+<span class="k">WHERE</span>
+<span class="p">{</span>
+  <span class="nl">&lt;http://example.org/book/book1&gt;</span> <span class="nl">&lt;http://purl.org/dc/elements/1.1/title&gt;</span> <span class="nv">?title</span> <span class="p">.</span>
+<span class="p">}</span>
+</pre></div>
+<h3>Scheme</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">nstore-query</span>
+  <span class="p">(</span><span class="nf">nstore-from</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+               <span class="p">(</span><span class="nb">list </span><span class="ss">&#39;http://example</span><span class="o">.</span><span class="nv">org/book/book1</span>
+                     <span class="ss">&#39;http://purl</span><span class="o">.</span><span class="nv">org/dc/elements/1</span><span class="o">.</span><span class="mi">1</span><span class="nv">/title</span>
+                     <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;title</span><span class="p">))))</span>
+</pre></div>
+<h3>SPARQL</h3>
+<div class="highlight"><pre><span></span><span class="k">PREFIX</span> <span class="nn">foaf</span><span class="p">:</span>   <span class="nl">&lt;http://xmlns.com/foaf/0.1/&gt;</span>
+<span class="k">SELECT</span> <span class="nv">?name</span> <span class="nv">?mbox</span>
+<span class="k">WHERE</span>
+  <span class="p">{</span> <span class="nv">?x</span> <span class="nn">foaf</span><span class="p">:</span><span class="nt">name</span> <span class="nv">?name</span> <span class="p">.</span>
+    <span class="nv">?x</span> <span class="nn">foaf</span><span class="p">:</span><span class="nt">mbox</span> <span class="nv">?mbox</span> <span class="p">}</span>
+</pre></div>
+<h3>Scheme</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">nstore-query</span> <span class="p">(</span><span class="nf">nstore-from</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                           <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;graph</span><span class="p">)</span>
+                                 <span class="ss">&#39;http://xmlns</span><span class="o">.</span><span class="nv">com/foaf/0</span><span class="o">.</span><span class="mi">1</span><span class="nv">/name</span>
+                                 <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;name</span><span class="p">)))</span>
+              <span class="p">(</span><span class="nf">nstore-where</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                            <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;graph</span><span class="p">)</span>
+                                  <span class="ss">&#39;http://xmlns</span><span class="o">.</span><span class="nv">com/foaf/0</span><span class="o">.</span><span class="mi">1</span><span class="nv">/mbox</span>
+                                  <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;mbox</span><span class="p">))))</span>
+</pre></div>
+<p>If you prefer, you can define a procedure in Scheme:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">foaf</span> <span class="nv">symbol</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">string-&gt;symbol </span><span class="p">(</span><span class="nb">string-append </span><span class="s">&quot;http://xmlns.com/foaf/0.1/&quot;</span> <span class="p">(</span><span class="nb">symbol-&gt;string </span><span class="nv">symbol</span><span class="p">))))</span>
+</pre></div>
+<p>And then the query becomes:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">nstore-query</span> <span class="p">(</span><span class="nf">nstore-from</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                           <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;graph</span><span class="p">)</span>
+                                 <span class="p">(</span><span class="nf">foaf</span> <span class="ss">&#39;name</span><span class="p">)</span>
+                                 <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;name</span><span class="p">)))</span>
+              <span class="p">(</span><span class="nf">nstore-where</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                            <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;graph</span><span class="p">)</span>
+                                  <span class="p">(</span><span class="nf">foaf</span> <span class="ss">&#39;mbox</span><span class="p">)</span>
+                                  <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;mbox</span><span class="p">))))</span>
+</pre></div>
+<h2><code>FILTER</code></h2>
+<h3>SPARQL</h3>
+<div class="highlight"><pre><span></span><span class="k">PREFIX</span>  <span class="nn">dc</span><span class="p">:</span>  <span class="nl">&lt;http://purl.org/dc/elements/1.1/&gt;</span>
+<span class="k">SELECT</span>  <span class="nv">?title</span>
+<span class="k">WHERE</span>   <span class="p">{</span> <span class="nv">?x</span> <span class="nn">dc</span><span class="p">:</span><span class="nt">title</span> <span class="nv">?title</span>
+          <span class="k">FILTER</span> <span class="nf">regex</span><span class="p">(</span><span class="nv">?title</span><span class="p">,</span> <span class="s">&quot;^SPARQL&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+</pre></div>
+<h3>Scheme</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">gfilter</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">binding</span><span class="p">)</span> <span class="p">(</span><span class="nf">string-prefix?</span> <span class="s">&quot;SPARQL&quot;</span> <span class="p">(</span><span class="nf">hashmap-ref</span> <span class="nv">binding</span> <span class="ss">&#39;title</span><span class="p">)))</span>
+  <span class="p">(</span><span class="nf">nstore-query</span> <span class="p">(</span><span class="nf">nstore-from</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                             <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;x</span><span class="p">)</span>
+                                   <span class="ss">&#39;http://purl</span><span class="o">.</span><span class="nv">org/dc/elements/1</span><span class="o">.</span><span class="mi">1</span><span class="nv">/title</span>
+                                   <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;title</span><span class="p">)))))</span>
+</pre></div>
+<h3>SPARQL</h3>
+<div class="highlight"><pre><span></span><span class="k">PREFIX</span>  <span class="nn">dc</span><span class="p">:</span>  <span class="nl">&lt;http://purl.org/dc/elements/1.1/&gt;</span>
+<span class="k">PREFIX</span>  <span class="nn">ns</span><span class="p">:</span>  <span class="nl">&lt;http://example.org/ns#&gt;</span>
+<span class="k">SELECT</span>  <span class="nv">?title</span> <span class="nv">?price</span>
+<span class="k">WHERE</span>   <span class="p">{</span> <span class="nv">?x</span> <span class="nn">ns</span><span class="p">:</span><span class="nt">price</span> <span class="nv">?price</span> <span class="p">.</span>
+          <span class="k">FILTER</span> <span class="p">(</span><span class="nv">?price</span> <span class="o">&lt;</span> <span class="mf">30.5</span><span class="p">)</span>
+          <span class="nv">?x</span> <span class="nn">dc</span><span class="p">:</span><span class="nt">title</span> <span class="nv">?title</span> <span class="p">.</span> <span class="p">}</span>
+</pre></div>
+<h3>Scheme</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">gfilter</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">binding</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt; </span><span class="p">(</span><span class="nf">hashmap-ref</span> <span class="nv">binding</span> <span class="ss">&#39;price</span><span class="p">)</span> <span class="mf">30.5</span><span class="p">))</span>
+  <span class="p">(</span><span class="nf">nstore-query</span> <span class="p">(</span><span class="nf">nstore-from</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                             <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;x</span><span class="p">)</span>
+                                   <span class="ss">&#39;http://example</span><span class="o">.</span><span class="nv">org/ns</span><span class="o">#</span><span class="nv">price</span>
+                                   <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;price</span><span class="p">)))</span>
+                <span class="p">(</span><span class="nf">nstore-where</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                              <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;x</span><span class="p">)</span>
+                                    <span class="ss">&#39;http://purl</span><span class="o">.</span><span class="nv">org/dc/elements/1</span><span class="o">.</span><span class="mi">1</span><span class="nv">/title</span>
+                                    <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;title</span><span class="p">)))))</span>
+</pre></div>
+<h2><code>OPTIONAL</code></h2>
+<h3>SPARQL</h3>
+<div class="highlight"><pre><span></span><span class="k">PREFIX</span> <span class="nn">foaf</span><span class="p">:</span> <span class="nl">&lt;http://xmlns.com/foaf/0.1/&gt;</span>
+<span class="k">SELECT</span> <span class="nv">?name</span> <span class="nv">?mbox</span>
+<span class="k">WHERE</span>  <span class="p">{</span> <span class="nv">?x</span> <span class="nn">foaf</span><span class="p">:</span><span class="nt">name</span>  <span class="nv">?name</span> <span class="p">.</span>
+         <span class="k">OPTIONAL</span> <span class="p">{</span> <span class="nv">?x</span>  <span class="nn">foaf</span><span class="p">:</span><span class="nt">mbox</span>  <span class="nv">?mbox</span> <span class="p">}</span>
+       <span class="p">}</span>
+</pre></div>
+<h3>Scheme</h3>
+<p>JOKER!</p>
+<h2><code>UNION</code></h2>
+<h3>SPARQL</h3>
+<div class="highlight"><pre><span></span><span class="k">PREFIX</span> <span class="nn">dc10</span><span class="p">:</span>  <span class="nl">&lt;http://purl.org/dc/elements/1.0/&gt;</span>
+<span class="k">PREFIX</span> <span class="nn">dc11</span><span class="p">:</span>  <span class="nl">&lt;http://purl.org/dc/elements/1.1/&gt;</span>
+
+<span class="k">SELECT</span> <span class="nv">?title</span>
+<span class="k">WHERE</span>  <span class="p">{</span> <span class="p">{</span> <span class="nv">?book</span> <span class="nn">dc10</span><span class="p">:</span><span class="nt">title</span>  <span class="nv">?title</span> <span class="p">}</span> <span class="k">UNION</span> <span class="p">{</span> <span class="nv">?book</span> <span class="nn">dc11</span><span class="p">:</span><span class="nt">title</span>  <span class="nv">?title</span> <span class="p">}</span> <span class="p">}</span>
+</pre></div>
+<h3>Scheme</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">gappend</span>
+  <span class="p">(</span><span class="nf">nstore-select</span> <span class="p">(</span><span class="nf">nstore-from</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                              <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;book</span><span class="p">)</span>
+                                    <span class="ss">&#39;http://purl</span><span class="o">.</span><span class="nv">org/dc/elements/1</span><span class="o">.</span><span class="mi">0</span><span class="nv">/title</span>
+                                    <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;title</span><span class="p">))))</span>
+  <span class="p">(</span><span class="nf">nstore-select</span> <span class="p">(</span><span class="nf">nstore-from</span> <span class="nv">tx</span> <span class="nv">triplestore</span>
+                              <span class="p">(</span><span class="nb">list </span><span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;book</span><span class="p">)</span>
+                                    <span class="ss">&#39;http://purl</span><span class="o">.</span><span class="nv">org/dc/elements/1</span><span class="o">.</span><span class="mi">1</span><span class="nv">/title</span>
+                                    <span class="p">(</span><span class="nf">nstore-var</span> <span class="ss">&#39;title</span><span class="p">)))))</span>
+</pre></div>
+<p>You are not obliged to copy-paste and you can factor queries...</p>
+<h2><code>FILTER NOT EXISTS</code></h2>
+<p>JOKER</p>
+<h2><code>FILTER EXISTS</code></h2>
+<p>JOKER</p>
+<h2><code>MINUS</code></h2>
+<p>JOKER</p>
+<h2>BIND</h2>
+<p>Use <code>gmap</code></p>
+<h2><code>GROUP BY</code></h2>
+<p>JOKER</p>
+<h2><code>HAVING</code></h2>
+<p>Use <code>gfilter</code></p>
+<h2>Sub-queries</h2>
+<p>Trivial.</p>
+<h2>Graph queries</h2>
+<p>Trivial.</p>
+<h2><code>ORDER BY</code></h2>
+<p>JOKER</p>
+<h2><code>DISTINCT</code></h2>
+<p>JOKER</p>
+<h2><code>LIMIT ... OFFSET ...</code></h2>
+<p>Use <code>gtake</code> and <code>gdrop</code>.</p>
+</div>
+	</div>
+    </body>
+</html>
