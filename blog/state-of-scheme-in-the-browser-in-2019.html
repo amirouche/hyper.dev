@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/10/04 - State of Scheme in the Browser</h1>
+<p>I made some progress around my experiences in the browser, this lead
+me to write a Scheme-to-JavaScript compiler that is incomplete but can
+do some stuff.</p>
+<h2>Chicken</h2>
+<p>I still did not try Chicken's Spock egg.</p>
+<p>ref: <a href="http://wiki.call-cc.org/eggref/4/spock">http://wiki.call-cc.org/eggref/4/spock</a></p>
+<h2>BiwaScheme</h2>
+<p>This is an interpreter written in JavaScript that doesn't support
+tail-call optimization.</p>
+<ul>
+<li>demo: <a href="https://hyperdev.fr/defunct-forward.scm/">https://hyperdev.fr/defunct-forward.scm/</a></li>
+<li>repo: <a href="https://github.com/amirouche/defunct-forward.scm">https://github.com/amirouche/defunct-forward.scm</a></li>
+</ul>
+<h2>Gambit JavaScript backend</h2>
+<p>It is still a work in progress. It prolly support tail-call
+optimization but requires some work. With the build I tested,
+tail-call factorial gives an error.</p>
+<ul>
+<li>demo: <a href="https://scheme-live.github.io/scheme-fuss/">https://scheme-live.github.io/scheme-fuss/</a></li>
+<li>repo: <a href="https://github.com/scheme-live/scheme-fuss">https://github.com/scheme-live/scheme-fuss</a></li>
+</ul>
+<h2>Schism</h2>
+<p>This is the most promising stuff. It is a self-hosted
+Scheme-to-WebAssembly compiler. The two things that are missing are
+some kind of call/cc support and I don't know how to yield the control
+back to JavaScript.</p>
+<ul>
+<li>repo: <a href="https://github.com/google/schism/">https://github.com/google/schism/</a></li>
+</ul>
+<h2>Chibi Scheme WebAssembly build</h2>
+<p>It works most of the time on Firefox but it (used to) crash on Windows
+Chrome.</p>
+<ul>
+<li>repo: <a href="https://github.com/scheme-live/ff.scm">https://github.com/scheme-live/ff.scm</a></li>
+<li>demo: <a href="https://scheme-live.github.io/ff.scm/">https://scheme-live.github.io/ff.scm/</a></li>
+</ul>
+<h2>Ruse Scheme</h2>
+<p>This is my work-in-progress compiler that targets JavaScript and not
+WebAssembly (yet).</p>
+<ul>
+<li>repo: <a href="https://github.com/scheme-live/ruse-scheme/">https://github.com/scheme-live/ruse-scheme/</a></li>
+<li>demo: <a href="https://scheme-live.github.io/ruse-scheme/demo/counter/">https://scheme-live.github.io/ruse-scheme/demo/counter/</a></li>
+</ul>
+</div>
+	</div>
+    </body>
+</html>

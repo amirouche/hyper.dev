@@ -143,6 +143,10 @@ input[type="submit"]:hover {
 
 /* ROOT */
 
+#root {
+    padding-bottom: 100px;
+}
+
 #root > h1 {
     padding: 15px;
 }
