@@ -20,9 +20,11 @@ tail-call optimization.
 
 ## Gambit JavaScript backend
 
-It is still a work in progress. It prolly support tail-call
+It is still a work in progress. ~~It prolly support tail-call
 optimization but requires some work. With the build I tested,
-tail-call factorial gives an error.
+tail-call factorial gives an error.~~
+
+edit: It works well actually. The problem was on my side.
 
 - demo: https://scheme-live.github.io/scheme-fuss/
 - repo: https://github.com/scheme-live/scheme-fuss
@@ -30,9 +32,9 @@ tail-call factorial gives an error.
 ## Schism
 
 This is the most promising stuff. It is a self-hosted
-Scheme-to-WebAssembly compiler. The two things that are missing are
-some kind of call/cc support and I don't know how to yield the control
-back to JavaScript.
+Scheme-to-WebAssembly (wasm) compiler. The two things that are missing
+are some kind of call/cc support and I don't know how to yield the
+control back to JavaScript.
 
 - repo: https://github.com/google/schism/
 

@@ -37,18 +37,19 @@ tail-call optimization.</p>
 <li>repo: <a href="https://github.com/amirouche/defunct-forward.scm">https://github.com/amirouche/defunct-forward.scm</a></li>
 </ul>
 <h2>Gambit JavaScript backend</h2>
-<p>It is still a work in progress. It prolly support tail-call
+<p>It is still a work in progress. <del>It prolly support tail-call
 optimization but requires some work. With the build I tested,
-tail-call factorial gives an error.</p>
+tail-call factorial gives an error.</del></p>
+<p>edit: It works well actually. The problem was on my side.</p>
 <ul>
 <li>demo: <a href="https://scheme-live.github.io/scheme-fuss/">https://scheme-live.github.io/scheme-fuss/</a></li>
 <li>repo: <a href="https://github.com/scheme-live/scheme-fuss">https://github.com/scheme-live/scheme-fuss</a></li>
 </ul>
 <h2>Schism</h2>
 <p>This is the most promising stuff. It is a self-hosted
-Scheme-to-WebAssembly compiler. The two things that are missing are
-some kind of call/cc support and I don't know how to yield the control
-back to JavaScript.</p>
+Scheme-to-WebAssembly (wasm) compiler. The two things that are missing
+are some kind of call/cc support and I don't know how to yield the
+control back to JavaScript.</p>
 <ul>
 <li>repo: <a href="https://github.com/google/schism/">https://github.com/google/schism/</a></li>
 </ul>
