@@ -23,76 +23,76 @@
 	<div id="root">
 	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
 	    <div><h1>2019/10/07 - FoundationDB</h1>
-<p>Ceci est un rendu approximatif avec quelque ameliorations au talk que
-j'ai donnee hier chez BackMarket.</p>
+<p>Ceci est un compte rendu approximatif, avec quelque améliorations, au
+talk que j'ai donné hier chez BackMarket.</p>
 <h2>A Database To Rule Them All</h2>
-<p>Derriere ce titre pompeux se cache la volonte a peine voile de faire
-de FoundationDB votre principale source de verite dans votre systeme
+<p>Derrière ce titre pompeux se cache la volonté a peine voilée de faire
+de FoundationDB votre principale source de vérité dans votre système
 d'information.</p>
 <p>Mais aujourd'hui je ne veux pas (uniquement) vous vendre FoundationDB
-et transmettre une idee plus grande. A savoir, comment aborder la
-programmation des bases de donnee clef-valeur ordonnees. Contrairement
-au <code>dict</code> Python, ce n'est pas l'ordre d'insertion qui prime mais la
-comparaison lexicographic entre les octets, autrement dit l'ordre du
-dictionaire des langues naturelles.</p>
+et transmettre une idée plus grande. À savoir, comment aborder la
+programmation des bases de données clef-valeur
+ordonnées. Contrairement au <code>dict</code> Python, ce n'est pas l'ordre
+d'insertion qui prime mais la comparaison lexicographique entre les
+octets, autrement dit l'ordre du dictionnaire des langues naturelles.</p>
 <h3>Kesako FoundationDB</h3>
-<p>FoundationDB est une base de donnee ordonee clef-valeurs scalable
+<p>FoundationDB est une base de données ordonnée clef-valeurs scalable
 horizontalement qui est
 <a href="https://fr.wikipedia.org/wiki/Propri%C3%A9t%C3%A9s_ACID">ACID</a> et
-respecte les guaranties de Coherence et resiste au erreurs de
-Partionnement dans le cadre du <a href="https://fr.wikipedia.org/wiki/Th%C3%A9or%C3%A8me_CAP">theoreme
-CAP</a>.  Les
-garanties offertes sont similaires a PosgreSQL (c'est dire CP)</p>
-<p>Voir <a href="https://apple.github.io/foundationdb/cap-theorem.html">https://apple.github.io/foundationdb/cap-theorem.html</a></p>
-<p>C'est aussi une base de donnee mieux tester que les bases de donnees
-qui ont endurer les tests <a href="https://jepsen.io/">jespen.io</a>. En fait,
-l'un des foundateur de FoundationDB a quitte Apple pour se concentrer
-sur cette methode de developpement (qui en somme est du TDD++) dans
-une entreprise dedies a promouvoir cette pratique dite de la
+respecte les garanties de Cohérence et résiste aux erreurs de
+Partitionnement dans le cadre du <a href="https://fr.wikipedia.org/wiki/Th%C3%A9or%C3%A8me_CAP">théorème
+CAP</a>. Les
+garanties offertes sont similaires a PosgreSQL (c'est à dire CP).</p>
+<p>Voir
+<a href="https://apple.github.io/foundationdb/cap-theorem.html">https://apple.github.io/foundationdb/cap-theorem.html</a></p>
+<p>C'est aussi une base de données mieux testée que les bases de données
+qui ont enduré les tests <a href="https://jepsen.io/">jespen.io</a>. En fait,
+l'un des fondateur de FoundationDB a quitté Apple pour se concentrer
+sur cette méthode de développement (qui est en somme du TDD++) dans
+une entreprise dédiée à promouvoir cette pratique, dite de la
 simulation.</p>
-<p>Voir <a href="https://www.youtube.com/watch?v=fFSPwJFXVlw">https://www.youtube.com/watch?v=fFSPwJFXVlw</a>.</p>
-<p>Cela etant dit, l'idee la plus importante pour commencer la
-programmation avec FoundationDB est l'idee qu'il s'agit d'un
-<em>dictionaire ordonnee</em>.  Et cette "ordre" fait de FoundationDB une
-base tres versatiles. En preservant les garanties ACID et CP pour les
-charges temps reels, elle peux s'adapter a n'importe quelle (!)
-modele de donnee. D'ou l'idee d'en faire la source de verite
-principale.</p>
-<p>Un dictionaire ordonnee, comme <a href="https://fr.wikipedia.org/wiki/Arbre_bicolore">l'arbre rouge et
+<p>Voir
+<a href="https://www.youtube.com/watch?v=fFSPwJFXVlw">https://www.youtube.com/watch?v=fFSPwJFXVlw</a>.</p>
+<p>Cela étant dit, l’idée la plus importante pour commencer la
+programmation avec FoundationDB est l’idée qu'il s'agit d'un
+<em>dictionnaire ordonné</em>. Et cette "ordre" fait de FoundationDB une base
+très versatile. En préservant les garanties ACID et CP pour les
+charges temps réel, elle peut s'adapter à n'importe quel(!) modèle de
+données. D’où l’idée d'en faire la source de vérité principale.</p>
+<p>Un dictionnaire ordonné, comme <a href="https://fr.wikipedia.org/wiki/Arbre_bicolore">l'arbre rouge et
 noir</a>, n'est pas
-uniquement utile pour rangee des entiers dans l'ordre croissant ou
-decroissant avec une complexite logarithmique. L'ordre permet de creer
-des structures ou abstraction de pus haut niveau.</p>
+uniquement utile pour ranger des entiers dans l'ordre croissant ou
+décroissant avec une complexité logarithmique. L'ordre permet de créer
+des structures ou abstraction de plus haut niveau.</p>
 <h3>Who use FoundationDB</h3>
 <p>Je vous renvoie vers les <a href="https://www.youtube.com/playlist?list=PLbzoR-pLrL6q7uYN-94-p_-Q3hyAmpI7o">FoundationDB Summit de
 2018</a>,
 ainsi que le <a href="https://forums.foundationdb.org/t/foundationdb-summit-2019/1636?u=amirouche">future summit de
 2019</a>
 de la Linux Foundation.</p>
-<p>TL;DR: Des entreprises qui doivent gerer de gros volume de donnee.</p>
+<p>TL;DR: Des entreprises qui doivent gérer de gros volume de données.</p>
 <p>Note: voir le talk: <a href="https://www.youtube.com/watch?v=16uU_Aaxp9Y&amp;list=PLbzoR-pLrL6q7uYN-94-p_-Q3hyAmpI7o&amp;index=2&amp;t=0s">"Lightning Talk: Entity Store: A FoundationDB
 Layer for Versioned Entities with Fine Grained Authorization and
 Lineage"</a>
-qui discute d'une base de donnee utilise dans le cadre de pipeline de
-data science chez Apple (ecrit en Python 2.7 :).</p>
+qui discute d'une base de données utilisée dans le cadre de pipeline
+de data science chez Apple (écrit en Python 2.7 :).</p>
 <h3>Why use FoundationDB</h3>
 <ul>
-<li><p>Vous avez plus d'un 1TB de donnee</p>
+<li><p>Vous avez plus d'un 1TB de donnée</p>
 </li>
-<li><p>Vous avez besoin de resistance au panne et donc besoin de replication, YOLO!</p>
+<li><p>Vous avez besoin de résistance aux pannes et donc besoin de réplication, YOLO!</p>
 </li>
-<li><p>Vous avez de l'argent a investir sur le long terme. Le projet reste
-jeune et beaucoup de fruits restent a ceuillir.</p>
+<li><p>Vous avez de l'argent à investir sur le long terme. Le projet reste jeune et beaucoup de fruits restent à cueillir.</p>
 </li>
 <li><p>Vous voulez apprendre quelque chose de nouveau, sans quitter votre zone de confort :)</p>
 </li>
 </ul>
 <h3>When not to use FoundationDB</h3>
-<p>Vous n'avez pas besoin d'utilisez FoundationDB sur vos projet legacy
-qui tourne bien! Si vous utilisez PosgreSQL pour votre projet perso ou
-d'entreprise probablement que cela va tenir a certains temps.</p>
-<p>Cela dit sachez que FoundationDB, n'est pas la seule base de donnee
-clef-valeur ordonnnees.</p>
+<p>Vous n'avez pas besoin d'utiliser FoundationDB sur vos projet legacy
+qui tournent bien! Si vous utilisez PosgreSQL pour votre projet perso
+ou d'entreprise probablement que cela va tenir un certain temps.</p>
+<p>Cela dit sachez que FoundationDB, n'est pas la seule base de données
+clef-valeur ordonnées.</p>
 <p>Il y a:</p>
 <ul>
 <li>SQLite LSM extension, voir <a href="https://github.com/coleifer/python-lsm-db/">https://github.com/coleifer/python-lsm-db/</a></li>
@@ -101,25 +101,25 @@ clef-valeur ordonnnees.</p>
 <li>Google LevelDB</li>
 <li>Et feu <a href="https://docs.python.org/2/library/bsddb.html">bsddb</a></li>
 </ul>
-<p>Sans oublier TiKV ou Google Spanner (privatif). A ce sujet je
-recommende la lecture du papier <a href="https://ai.google/research/pubs/pub39966">"Spanner: Google's
+<p>Sans oublier TiKV ou Google Spanner (privatif). À ce sujet je
+recommande la lecture du papier <a href="https://ai.google/research/pubs/pub39966">"Spanner: Google's
 Globally-Distributed
 Database"</a>.</p>
-<p>(Et pendant que j'y suis le papier surnomme <a href="https://ai.google/research/pubs/pub43438">Large-scale cluster
+<p>(Et pendant que j'y suis le papier surnommé <a href="https://ai.google/research/pubs/pub43438">Large-scale cluster
 management at Google with
 <strong>Borg</strong></a>)</p>
 <p>(Note: relire <a href="https://ai.google/research/pubs/pub48030">"Fast key-value stores: An idea whose time has come and
 gone"</a>)</p>
 <h3>How to program FoundationDB</h3>
-<p>L'ordre du dictionaire FoundationDB n'est pas l'ordre d'insertion!</p>
-<p>L'ordre du dictionaire FoundationDB n'est pas l'ordre d'insertion!</p>
-<p>L'ordre du dictionaire FoundationDB n'est pas l'ordre d'insertion!</p>
-<p>Grace a tuple.pack on peux considerer que foundationdb est un
-dictionaire de tuple ordonnee selon l'ordre naturel des types de bases
-<code>int</code>, <code>float</code>, <code>byte</code>, <code>str</code>.</p>
-<p>Oui vous avez bien lu entre les lignes, il y a un couple de fonction
+<p>L'ordre du dictionnaire FoundationDB n'est pas l'ordre d'insertion!</p>
+<p>L'ordre du dictionnaire FoundationDB n'est pas l'ordre d'insertion!</p>
+<p>L'ordre du dictionnaire FoundationDB n'est pas l'ordre d'insertion!</p>
+<p>Grâce à tuple.pack on peut considérer que foundationdb est un
+dictionnaire de tuples ordonnés selon l'ordre naturel des types de
+bases <code>int</code>, <code>float</code>, <code>byte</code>, <code>str</code>.</p>
+<p>Oui vous avez bien lu entre les lignes, il y a un couple de fonctions
 qui permet de traduire certains types Python vers des bytes qui
-perservent l'ordre de ses types.</p>
+préservent l'ordre de ces types.</p>
 <p>Voir le module
 <a href="https://github.com/apple/foundationdb/blob/master/bindings/python/fdb/tuple.py#L21"><code>fdb.tuple</code></a>
 dans les bindings Python officiels.</p>
@@ -141,12 +141,12 @@ dans les bindings Python officiels.</p>
 
 <span class="k">assert</span> <span class="nb">tuple</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="nb">tuple</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expected</span><span class="p">))</span> <span class="o">==</span> <span class="n">expected</span>
 </pre></div>
-<p><strong>L'ordre permet de creer des structures ou abstraction de plus haut niveau.</strong></p>
+<p><strong>L'ordre permet de créer des structures ou abstractions de plus haut niveau.</strong></p>
 <h3>The End</h3>
-<p>Avant de commencer garder en tete que FoundationDB n'est pas tres
-facile a mettre en production, mais c'est facile a tester en dev. Il y
-a un backend memoire et un backend ssd. Et un nouveau backend appeller
-redwood qui va lever <a href="https://apple.github.io/foundationdb/known-limitations.html#known-limitations">certaines des limitations decrites dans la
+<p>Avant de commencer, garder en tête que FoundationDB n'est pas très
+facile à mettre en production, mais c'est facile à tester en dev. Il y
+a un backend mémoire et un backend ssd. Et un nouveau backend appellé
+redwood qui va lever <a href="https://apple.github.io/foundationdb/known-limitations.html#known-limitations">certaines des limitations décrites dans la
 documentation
 officielle</a>.</p>
 </div>
