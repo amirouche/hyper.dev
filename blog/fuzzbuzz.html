@@ -99,8 +99,9 @@ all possible input documents.</p>
 instead?</p>
 <p>That turns out to be is possible.</p>
 <p>Given a simhash of 8 bits, one can construct a merkel-tree with binary
-<code>AND</code> operator as a hash function and serialize the resulting tree
+<code>OR</code> operator as a hash function and serialize the resulting tree
 using a depth-first search back to a bit string called <code>bbk</code>.</p>
+<p>edit: the merkel-tree hash function is binary <code>OR</code>.</p>
 <p><code>bbk</code> will have the amazing property that the more
 similar to two documents are, the longer the common prefix will be.</p>
 <p>At query time, the remote distributed dictionary expert system must

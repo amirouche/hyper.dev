@@ -89,8 +89,10 @@ instead?
 That turns out to be is possible.
 
 Given a simhash of 8 bits, one can construct a merkel-tree with binary
-`AND` operator as a hash function and serialize the resulting tree
+`OR` operator as a hash function and serialize the resulting tree
 using a depth-first search back to a bit string called `bbk`.
+
+edit: the merkel-tree hash function is binary `OR`.
 
 `bbk` will have the amazing property that the more
 similar to two documents are, the longer the common prefix will be.
