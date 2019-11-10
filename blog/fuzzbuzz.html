@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/11/10 - DIY approximate string matching (fuzzbuzz)</h1>
+<p>The idea of fuzzbuzz is to do fuzzy search in textual data otherwise
+said, approximate string matching. This is based on the
+<a href="https://github.com/amirouche/fuzzbuzz/raw/master/doc/simhash-2007.pdf">simhash</a>.
+Which can be summarized as follow:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">features</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a bag of grams of the given STRING.&quot;&quot;&quot;</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;$&#39;</span> <span class="o">+</span> <span class="n">token</span> <span class="o">+</span> <span class="s1">&#39;$&#39;</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="n">iterator</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">ngram</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="s1">&#39;$CONCEPT$&#39;</span><span class="p">))])</span>
+        <span class="k">for</span> <span class="n">gram</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="nb">hash</span><span class="p">(</span><span class="n">gram</span><span class="p">)]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span> <span class="nf">simhash</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute a similary hash called simhash&quot;&quot;&quot;</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">features</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="n">intermediate</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">HASH_SIZE</span>
+    <span class="k">for</span> <span class="n">feature</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">input</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">int2bits</span><span class="p">(</span><span class="n">feature</span><span class="p">)):</span>
+            <span class="n">intermediate</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="n">count</span> <span class="k">if</span> <span class="n">bit</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span> <span class="k">else</span> <span class="o">-</span><span class="n">count</span>
+    <span class="c1"># compute simhash</span>
+    <span class="n">simhash</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;1&#39;</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;0&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">intermediate</span><span class="p">])</span>
+    <span class="n">simhash</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">simhash</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">simhash</span>
+</pre></div>
+<p>The astute reader will recognize that <code>simhash</code> returns a positive
+integer based on a bag-of-grams where grams are slices of words
+between 2 and 7 magic.</p>
+<p>The idea is that simhash will capture similarity that exist in
+small-ish strings:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">fuzzbuzz</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">hamming2</span><span class="p">(</span><span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;obama&#39;</span><span class="p">),</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;barack obama&#39;</span><span class="p">))</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="mi">16</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">hamming2</span><span class="p">(</span><span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;obama&#39;</span><span class="p">),</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;trump&#39;</span><span class="p">))</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="mi">30</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">hamming2</span><span class="p">(</span><span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;concept&#39;</span><span class="p">),</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;concpet&#39;</span><span class="p">))</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="mi">22</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">hamming2</span><span class="p">(</span><span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;concept&#39;</span><span class="p">),</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;concept&#39;</span><span class="p">))</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="mi">0</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">hamming2</span><span class="p">(</span><span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;concept&#39;</span><span class="p">),</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;concept car&#39;</span><span class="p">))</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="mi">11</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">hamming2</span><span class="p">(</span><span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;concept&#39;</span><span class="p">),</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;quality&#39;</span><span class="p">))</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="mi">30</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">8</span><span class="p">]:</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">hamming2</span><span class="p">(</span><span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;quality assurance&#39;</span><span class="p">),</span> <span class="n">fuzzbuzz</span><span class="o">.</span><span class="n">simhash</span><span class="p">(</span><span class="s1">&#39;quality&#39;</span><span class="p">))</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">8</span><span class="p">]:</span> <span class="mi">17</span>
+</pre></div>
+<p>That is it gives a clue of how similar two strings are. That said, it
+requires to compute the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming
+distance</a> of the
+simhash.</p>
+<p>Given a giant set of documents and a new document, figuring which
+document is the most similar requires to compute the simhash before
+hand at index time, and then at query time, it requires to compare the
+simhash of the new input document with the simhash of ALL the known
+documents the complexity is at least O(n).</p>
+<p>In fuzzbuzz, <code>HASH_SIZE</code> is not documented magic, but was chosen to be
+two times bigger than the count of known documents: 2^32 = 4 294
+967 296. That is around 4/2 billions documents. That is around 2
+billions * 32 / 8 = 8 000 000 bytes otherwise 8GB of memory required
+just to store the simhashes. That is way too much for my laptop with
+12GB of RAM.</p>
+<p>It is not possible to pre-compute (aka. index) the Hamming distance of
+all possible input documents.</p>
+<p>What about indexing, in an Ordered Key-Value store, the simhash
+instead?</p>
+<p>That turns out to be is possible.</p>
+<p>Given a simhash of 8 bits, one can construct a merkel-tree with binary
+<code>AND</code> operator as a hash function and serialize the resulting tree
+using a depth-first search back to a bit string called <code>bbk</code>.</p>
+<p><code>bbk</code> will have the amazing property that the more
+similar to two documents are, the longer the common prefix will be.</p>
+<p>At query time, the remote distributed dictionary expert system must
+compute the simhash of the new document, then the <code>bbk</code> hash and then
+<a href="http://source.wiredtiger.com/2.3.1/cursor_ops.html">search near</a> or
+query using ranges of <code>bbk</code> prefixes of decreasing length.</p>
+</div>
+	</div>
+    </body>
+</html>
