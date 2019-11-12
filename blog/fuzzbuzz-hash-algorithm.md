@@ -21,6 +21,7 @@ For instance, let's pick `1001 0001` bit string. We can construct the
 following Merkel tree:
 
 ```
+.
        __  1  __
       /         \
      /           \
@@ -37,6 +38,7 @@ depth-first traversal.
 Here is the same tree, with the index of each bit between parens:
 
 ```
+.
        __ 1(0)__
       /         \
      /           \
