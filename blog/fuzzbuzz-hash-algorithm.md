@@ -13,12 +13,12 @@ algorithm that has the following properties:
   two bit strings, the bigger the longest common prefix of their
   fuzzbuzz hash.
 
-The algorithm rely on a Merkel-tree that use a bitwise `OR` as a hash
+The algorithm rely on a Merkle-tree that use a bitwise `OR` as a hash
 function and then serialize the tree using a top-down depth-first
 traversal algorithm.
 
 For instance, let's pick `1001 0001` bit string. We can construct the
-following Merkel tree:
+following Merkle tree:
 
 ```
 .
