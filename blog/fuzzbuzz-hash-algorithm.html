@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/11/12 - FuzzBuzz Hash Algorithm</h1>
+<p>fuzzbuzz hash is a <a href="https://en.wikipedia.org/wiki/Locality-sensitive_hashing">Locality-sensitive
+hashing</a>
+algorithm that has the following properties:</p>
+<ul>
+<li><p>The length of the longest common prefix of two bit strings is
+smaller that the length of the longest common prefix of their
+fuzzbuzz hash.</p>
+</li>
+<li><p>The smaller the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming
+distance</a> between
+two bit strings, the bigger the longest common prefix of their
+fuzzbuzz hash.</p>
+</li>
+</ul>
+<p>The algorithm rely on a Merkel-tree that use a bitwise <code>OR</code> as a hash
+function and then serialize the tree using a top-down depth-first
+traversal algorithm.</p>
+<p>For instance, let's pick <code>1001 0001</code> bit string. We can construct the
+following Merkel tree:</p>
+
+<div><pre>__  1  __
+      /         \
+     /           \
+     1            1
+   /   \        /   \
+  1     1      0     1
+ / \   / \    / \   / \
+[1][0][0][1] [0][0][0][1]</pre></div>
+<p>Then we can serialize it the tree without the leafs, using top-down
+depth-first traversal.</p>
+<p>Here is the same tree, with the index of each bit between parens:</p>
+
+<div><pre>__ 1(0)__
+      /         \
+     /           \
+     1 (1)        1 (4)
+   /   \        /   \
+  1 (2) 1 (3)  0 (5) 1 (6)
+ / \   / \    / \   / \
+[1][0][0][1] [0][0][0][1]</pre></div>
+<p>That result is the following bitstring: <code>111 1101</code></p>
+<p>At last, we suffix that bitstring with the original bitstring:</p>
+
+<div><pre>11 1110 1001 0001</pre></div>
+<p>More experiments in <a href="https://github.com/amirouche/fuzzbuzz/blob/master/fuzz.py#L126">fuzzbuzz
+repository</a>.</p>
+</div>
+	</div>
+    </body>
+</html>
