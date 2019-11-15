@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title></title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<source src="/static/video/space.ogv" type="video/ogg"/>
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/11/15 - On the road the guile-babelia</h1>
+<p>Yeah, I am back in GNU Guile land. With yet another good name for the
+very same project that boils down to fight boredom, learn new skills
+and bring back the power to the computers every lambda users.</p>
+<p>Quick flashback: I started with a minimal bulletin board more than
+15 years ago. It was all good, and some success, lost all the backup
+and to repeat the same thing: poor software pratices. Nevermind, it was
+mostly copy-pasted LAMP stack code written on Windows 2000. The lost
+backups will haunt me back for sure. But what does not?! Then I tried
+with Python, Django, Flask, MongoDB, Neo4J, PosgreSQL, Whoosh, skipped
+ElasticSearch, read a few hundreds of lines of Lucene documentation
+and code. Dozens of science papers. Enjoy Ordered Key-Value Store all
+the way down. Re-discovered fuzzbuzz. Learned Scheme. gnunet is making
+progress. Dozen of prototypes on various subjects. I have a very good
+idea of the graphical user interface in terms of web stack (to get the
+project started). Various good good discussions happening around rdf,
+AI-KR, GOFAI. And a glimpse into proprietary commercial system that
+have great success.</p>
+<p>Eventually, more or less a roadmap for the next five decaces.</p>
+<p>I have two immediate pain points:</p>
+<ul>
+<li><p>gmail. I hate that interface. I much prefer inbox. I could upgrade
+ff.js framework. But meh. And Gambit is missing some library. I
+tried to help but then lost interest, temporarly, because the next
+point is more important.</p>
+</li>
+<li><p>Search engine overall user experience: simply said I want to own all
+the data I search and that should not be scatered in various
+privative or hidden sqlite files! I want an IDE of my research
+adventures. I do not want to do 3 or more clicks and fail to
+retrieve the paper I read 3 days or 3 years ago that is now not
+publicly accessible. I want to ban medium.com from my search
+results.  But still, unhide it in case of boredom or emergency.</p>
+</li>
+</ul>
+<p>You prolly guessed, that I want a personal search engine.</p>
+<p>Here is in no particular order pieces that I think are missing in GNU Guile:</p>
+<ul>
+<li>headless firefox driver for crawling Single-Page-Application,</li>
+<li>a smart crawler (see what use Common Crawl),</li>
+<li>news.ycombinator.com (meh) html snapshot,</li>
+<li>stackoverflow html snapshot,</li>
+<li>quora snapshot? not sure it is possible, it is a walled garden,</li>
+<li>wet/warc file parser,</li>
+<li>Common Crawl support,</li>
+<li>Somekind of wet/warc file consumer that will (only) build page/domain ranks.</li>
+<li>A fork of Grammar Link in pure Guile (with minisat bindings) to... check pages grammar.</li>
+<li>a word2vec and paragraph2vec similar to Gensim and Spacy that would
+allow to finger print the subject of domains / webpages against
+wikipedia vital articles hierarchy.</li>
+</ul>
+<p>Sure all this stuff can be put together in a few days by a junior
+architect using a franken-assemblage, to quote myself:</p>
+<blockquote><p>We could argue indefinitly that one or more of those requirements
+are unnecessary, overkill and YAGNI. We could argue that by relaxing
+a few of the requirements, a particular software or set of softwares
+can come close. We could argue endlessly that building
+yet-another-database [or search engine] is NIH, wheel re-invention
+that curse the software industry with fragmentation and fatigue. We
+could invoke UNIX philosophy, entreprise software architectures,
+experiences, know-how, failed patterns, decades of good services and
+big communities.</p>
+</blockquote>
+<p>Blue pill: To use a vocabulary that has a lot mindshare: that is my product, isn't?</p>
+<p>Red pill:</p>
+<blockquote><p>"Plans are only good intentions unless they immediately denerate into hard work"</p>
+<p>Peter Drucker</p>
+</blockquote>
+</div>
+	</div>
+    </body>
+</html>
