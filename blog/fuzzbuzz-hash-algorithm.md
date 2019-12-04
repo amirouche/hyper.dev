@@ -59,3 +59,8 @@ At last, we suffix that bitstring with the original bitstring:
 
 More experiments in [fuzzbuzz
 repository](https://github.com/amirouche/fuzzbuzz/blob/master/fuzz.py#L126).
+
+
+References:
+
+- https://vaibhavsagar.com/blog/2019/09/08/popcount/
