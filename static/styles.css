@@ -27,7 +27,7 @@ html {
 
 body {
     font-family: 'EBGaramond', serif;
-    font-size: 24px;
+    font-size: 28px;
     color: white;
     background: black;
 }
@@ -58,7 +58,7 @@ p {
 }
 
 code {
-    background: hsla(0, 0%, 100%, 0.1);
+    background: hsla(0, 0%, 100%, 0.3);
     padding: 3px;
     border-radius: 3px;
 }
@@ -116,10 +116,15 @@ a:hover {
 
 /* ROOT */
 
-#root > div {
+#root.index {
     padding-bottom: 100px;
-    background: hsla(0, 0%, 0%, 0.7);
+    background: hsla(0, 0%, 0%, 0.75);
     padding: 15px;
+}
+
+#root > div {
+    padding: 100px 0px;
+    background: hsla(0, 0%, 0%, 0.75);
 }
 
 #root > h1 {

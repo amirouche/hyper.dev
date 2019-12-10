@@ -2,11 +2,11 @@
 
 Yeah, I am back in GNU Guile land. With yet another good name for the
 very same project that boils down to fight boredom, learn new skills
-and bring back the power to the computers every lambda users.
+and bring back the power to the computers of every lambda users.
 
 Quick flashback: I started with a minimal bulletin board more than
 15 years ago. It was all good, and some success, lost all the backup
-and to repeat the same thing: poor software pratices. Nevermind, it was
+and to repeat the same mistake: poor software pratices. Nevermind, it was
 mostly copy-pasted LAMP stack code written on Windows 2000. The lost
 backups will haunt me back for sure. But what does not?! Then I tried
 with Python, Django, Flask, MongoDB, Neo4J, PosgreSQL, Whoosh, skipped
@@ -19,7 +19,7 @@ project started). Various good good discussions happening around rdf,
 AI-KR, GOFAI. And a glimpse into proprietary commercial system that
 have great success.
 
-Eventually, more or less a roadmap for the next five decaces.
+Eventually, more or less, a roadmap for the next five decaces.
 
 I have two immediate pain points:
 
@@ -70,6 +70,7 @@ Blue pill: To use a vocabulary that has a lot mindshare: that is my product, isn
 
 Red pill:
 
-> "Plans are only good intentions unless they immediately denerate into hard work"
+> "Plans are only good intentions unless they immediately degenerate
+> into hard work"
 >
 > Peter Drucker

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - 2019/12/10 - nomunofu</title>
+    </head>
+    <body>
+        <div id="background"></div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+	    <h1><a href="https://hyper.dev">hyper.dev</a></h1>
+	    <div><h1>2019/12/10 - nomunofu</h1>
+<p>nomunofu is database server written in GNU Guile that is powered by
+WiredTiger ordered key-value store, based on SRFI-167 and SRFI-168.</p>
+<p>It allows to store and query triples.  The goal is to make it much
+easier, definitely faster to query as much as possible tuples of three
+items.  To achieve that goal, the server part of the database is made
+very simple, and it only knows how to do pattern matching.  Also, it is
+possible to swap the storage engine to something that is horizontally
+scalable and resilient (read: foundationdb).</p>
+<p>The idea is to have a thin server and thick client, in order to offload
+the database server(s) from heavy computations.</p>
+<p>I pushed portable binaries built with gnu guix for amd64 with a small
+database file. You can download it with the following command:</p>
+
+<div><pre>$ wget https://hyper.dev/nomunofu-v0.1.3.tar.gz</pre></div>
+<p>The uncompressed directory is 7GB.</p>
+<p>Once you have downloaded the tarball, you can do the following cli
+dance to run the database server:</p>
+
+<div><pre>$ tar xf nomunofu-v0.1.3.tar.gz &amp;&amp; cd nomunofu &amp;&amp; ./nomunofu serve 8080</pre></div>
+<p>The database will be available on port 8080. Then you can use the
+python client to do queries.</p>
+<p>Here is example run on a subset of wikidata, that queries for:</p>
+<blockquote><p>instance of (P31) government (Q3624078)</p>
+</blockquote>
+<p>The python code looks like:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">nomunofu</span> <span class="kn">import</span> <span class="n">Nomunofu</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">nomunofu</span> <span class="kn">import</span> <span class="n">var</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">nomunofu</span> <span class="o">=</span> <span class="n">Nomunofu</span><span class="p">(</span><span class="s1">&#39;http://localhost:8080&#39;</span><span class="p">);</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">nomunofu</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+<span class="p">(</span><span class="n">var</span><span class="p">(</span><span class="s1">&#39;uid&#39;</span><span class="p">),</span>
+ <span class="s1">&#39;http://www.wikidata.org/prop/direct/P31&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;http://www.wikidata.org/entity/Q3624078&#39;</span><span class="p">),</span>
+<span class="p">(</span><span class="n">var</span><span class="p">(</span><span class="s1">&#39;uid&#39;</span><span class="p">),</span>
+ <span class="s1">&#39;http://www.w3.org/2000/01/rdf-schema#label&#39;</span><span class="p">,</span>
+ <span class="n">var</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">)))</span>
+
+<span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span>
+<span class="p">[{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q31&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Belgium&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q183&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Germany&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q148&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;China&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q148&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s2">&quot;People&#39;s Republic of China&quot;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q801&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Israel&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q45&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Portugal&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q155&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Brazil&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q916&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Angola&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q233&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Malta&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q878&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;United Arab Emirates&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q686&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Vanuatu&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q869&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Thailand&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q863&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Tajikistan&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q1049&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Sudan&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q1044&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Sierra Leone&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q912&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Mali&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q819&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Laos&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q298&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Chile&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q398&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Bahrain&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.wikidata.org/entity/Q12560&#39;</span><span class="p">,</span>
+<span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;Ottoman Empire&#39;</span><span class="p">}]</span>
+</pre></div>
+<p>As of right now there is less than 10 000 000 triples that were
+imported.  Blank nodes are included, and only English labels are
+imported.</p>
+<p>You can grab the source code with the following command:</p>
+
+<div><pre>$ git clone https://github.com/amirouche/nomunofu</pre></div>
+<p>I hope you have a good day!</p>
+</div>
+	</div>
+    </body>
+</html>
