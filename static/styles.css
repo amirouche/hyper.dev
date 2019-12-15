@@ -28,14 +28,14 @@ html {
 body {
     font-family: 'EBGaramond', serif;
     font-size: 28px;
-    color: white;
-    background: black;
+    color: black;
+    background: white;
 }
 
 h1 {
     font-family: 'League Gothic', Impact, sans-serif, sans;
     font-weight: normal;
-    color: white;
+    color: black;
     text-align: left;
     font-size: 2em;
 }
@@ -43,7 +43,7 @@ h1 {
 h2, h3, h4, h5, h6 {
     font-family: 'League Gothic', Impact, sans-serif, sans;
     font-weight: normal;
-    color: white;
+    color: black;
     text-align: left;
     margin: 0px;
 }
@@ -68,9 +68,9 @@ code {
 a:link,
 a:visited,
 a:active {
-    color: white;
+    color: black;
     text-decoration: none;
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid black;
 }
 
 a:hover {
@@ -90,12 +90,12 @@ a:hover {
     height: auto;
     z-index: -100;
     transform: translateX(-50%) translateY(-50%);
-    background: url(billy-huynh-278252-unsplash-small.jpg) no-repeat;
+    background: url(austerity-by-shvembldr.png) no-repeat;
     background-size: cover;
 }
 
 @media screen and (max-device-width: 800px) {
-    body { background: url(billy-huynh-278252-unsplash-small.jpg) #000 no-repeat center center fixed;}
+    body { background: url(austerity-by-shvembldr.png) #FFF no-repeat center center fixed;}
     #background { display: none;}
 }
 
@@ -111,20 +111,21 @@ a:hover {
     height: auto;
     z-index: -99;
     transform: translateX(-50%) translateY(-50%);
-    background: url(overlay-video-dark.png);
+    // background: url(overlay-video-dark.png);
+    background: hsla(0, 100%, 100%, 0.8);
 }
 
 /* ROOT */
 
 #root.index {
     padding-bottom: 100px;
-    background: hsla(0, 0%, 0%, 0.75);
+//    background: hsla(0, 0%, 0%, 0.75);
     padding: 15px;
 }
 
 #root > div {
     padding: 100px 0px;
-    background: hsla(0, 0%, 0%, 0.75);
+//    background: hsla(0, 0%, 0%, 0.75);
 }
 
 #root > h1 {
@@ -146,4 +147,12 @@ blockquote {
 p {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
+}
+
+div.highlight {
+    font-size: 0.9em;
+    background: black;
+    color: white;
+    padding: 15px;
+    margin: 15px;
 }
