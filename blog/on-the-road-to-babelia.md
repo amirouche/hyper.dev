@@ -1,4 +1,4 @@
-# 2019/11/15 - On the road the guile-babelia
+# 2019/11/15 - On the road to guile-babelia
 
 Yeah, I am back in GNU Guile land. With yet another good name for the
 very same project that boils down to fight boredom, learn new skills
