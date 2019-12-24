@@ -15,8 +15,17 @@
 	<div id="overlay">
 	</div>
 	<div id="root">
-	    <h1><a href="{{ base }}">hyper.dev</a></h1>
+            <h1><a href="{{ base }}">hyper.dev</a> <small>[<a href="{{ base }}/feed.xml">feed</a>] [<a href="{{ base }}/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
 	    {{ html | safe }}
 	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me what I got wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="{{ base }}/feed.xml">feed</a>!</p>
+            <p>Amirouche ~ amz3 ~ zig</p>
+        </div>
     </body>
 </html>

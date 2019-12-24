@@ -15,7 +15,7 @@
 	<div id="overlay">
 	</div>
 	<div id="root" class="index">
-	    <h1><a href="{{ base }}">hyper.dev</a></h1>
+	    <h1><a href="{{ base }}">hyper.dev</a> <small>[<a href="{{ base }}/feed.xml">feed</a>] [<a href="{{ base }}/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
 	    <ul>
 		{% for post in posts %}
 		    <li><a href="{{ base }}/blog/{{post['filename']}}">{{ post['title'] }}</a></li>

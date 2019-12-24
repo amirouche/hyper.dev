@@ -40,6 +40,15 @@ h1 {
     font-size: 2em;
 }
 
+h1 a:link,
+h1 a:visited,
+h1 a:hover,
+h1 a:active
+{
+    text-decoration: none;
+    border: none;
+}
+
 h2, h3, h4, h5, h6 {
     font-family: 'League Gothic', Impact, sans-serif, sans;
     font-weight: normal;
@@ -155,4 +164,13 @@ div.highlight {
     color: white;
     padding: 15px;
     margin: 15px;
+}
+
+#footer {
+    max-width: 500px;
+    margin: auto;
+    margin-bottom: 100px;
+    text-align: center;
+    line-height: 2em;
+
 }
