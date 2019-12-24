@@ -102,7 +102,7 @@ def make(root, base):
     log.info('generating feed at: %s', output)
     feed = FeedGenerator()
     feed.id(base)
-    feed.title('hyperdev.fr')
+    feed.title('hyper.dev')
     feed.subtitle('forward and beyond')
     feed.link(href=base + '/feed.xml', rel='self')
     for post in posts:
