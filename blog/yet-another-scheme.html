@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
+	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - 2020/01/22 - Yet Another Scheme</title>
+    </head>
+    <body>
+        <div id="background"></div>
+	<div id="overlay">
+	</div>
+	<div id="root">
+            <h1><a href="http://localhost:8000">hyper.dev</a> <small>[<a href="http://localhost:8000/feed.xml">feed</a>] [<a href="http://localhost:8000/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
+	    <div><h1>2020/01/22 - Yet Another Scheme</h1>
+<p>For a lot of time, I have been pondering the idea of building another
+Scheme implementation.
+<a href="https://en.wikipedia.org/wiki/Five_whys">Why?</a> For what purpose?</p>
+<h2>Fragmentation</h2>
+<p>As far as I can tell, Scheme as a programming language is easy to the
+mind, there is a limited set (albeit sometime powerful ones) to grasp
+before being productive. Scheme is easy to maintain in the sense that
+when you come back to a piece of code (that is tested) months after
+you last checked it, it is not only possible to make sense of it, but
+also easy to rework or improve it.</p>
+<p>Scheme has a healthy ecosystem of computer scientist, coders,
+standards and implementations.</p>
+<p>Many say, there is too many implementations, and that the it is bad
+luck for the programming as a whole.  I would add that there is too
+many <strong>maintained</strong> implementations.  I somewhat disagree with the
+fact that it is bad luck.  Scheme programming language describe a
+Turing-complete programming language that is easy, fun, documented,
+and grateful to implement in an interpreter or compiler.  That offers
+a clear and well documented path from apprentice to master.</p>
+<p>Too much choice, kills choice you might say; one side of the coin of
+the well-known the Scheme fatigue: which Scheme implementation should
+I pick?</p>
+<p>The answer is that you SHOULD choose: none. The <a href="http://www.scheme-reports.org/">Scheme
+Reports</a> steering committe agreed on
+fact that Scheme code ought to be be portable across implementations:</p>
+<p>&gt;</p>
+<blockquote><p>The purpose of this work is to facilitate sharing of Scheme
+code. One goal is to be able to reuse code written in one conforming
+implementation in another conforming implementation with as little
+change as possible. Another goal is for users of this work to be
+able to understand each other's code based on a shared and
+unambiguous interpretation of its meaning.</p>
+<p><a href="http://scheme-reports.org/2010/working-group-2-charter.html">Charter for [R7RS] working group
+2</a></p>
+</blockquote>
+<p>Based on experiences, both <a href="http://r6rs.org/">R6RS</a> and
+<a href="http://r7rs.org/">R7RS</a> provide a way to create portable code.  It is
+already possible to write portable code across Scheme implementations.
+The situation can only improve.</p>
+<p>Maybe they were <a href="https://weinholt.se/articles/r7rs-vs-r6rs/">some
+disagreements</a> about
+wording, philosophy and how big or small it ought to be.  That is
+somewhat political.  At the end of the day, each Scheme implementation
+retains its defining characteristics while being Scheme.</p>
+<p>I think, <strong>fragmentation is good</strong>. <a href="https://www.gnu.org/software/guile/news/gnu-guile-300-released.html">It helps push the limits of what
+is
+Scheme</a>.</p>
+<p>The standards helps draw a path for portability across schemes, is a
+shared space to exchange ideas, good practices, innovations and
+nurture emulation.</p>
+<h2>Do It Yourself</h2>
+<p>The other side of the Scheme coin, that I dubbed Scheme fatigue, is
+the Do-It-Yourself philosophy.  It stems somewhat from the fact that
+<a href="http://lambda-the-ultimate.org/node/3312">it used to be mostly a teaching
+material</a>.  But there is
+more than that.</p>
+<p>There is also the widespread meme along the lines of</p>
+<blockquote><p>Problems that yields technical issues in other programming
+languages; with Scheme programming language, they yield social
+issues.</p>
+</blockquote>
+<p>That means, that there is no problem to write the code solving any
+problem, the issue is to <strong>agree on the <a href="https://en.wikipedia.org/wiki/Worse_is_better">Good
+Thing</a></strong>. In fact, we
+do not <strong>need</strong> to agree on everything.  That is the point of Scheme.</p>
+<p>People cooperate toward a common goal, in distributed, non-coordinated
+way, even in evil environments with non-trusted peers most of the
+time, if not, all the time e.g. human race survival.  That is, the
+<a href="https://en.wikipedia.org/wiki/The_Cathedral_and_the_Bazaar">bazaar</a>
+is the Real Thing. I don't want to down play the role of the
+cathedral: the bazaar is made of many cathedral islands, some times
+one-man endeavors, some times the feat of many.</p>
+<p>I want to stress the fact that Scheme needs to <a href="https://en.wikipedia.org/wiki/Embrace,_extend,_and_extinguish">embrace, extend and
+encourage</a>
+more the distributed non-coordinated cooperation model.</p>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me what I got wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="http://localhost:8000/feed.xml">feed</a>!</p>
+            <p>Amirouche ~ zig</p>
+        </div>
+    </body>
+</html>
