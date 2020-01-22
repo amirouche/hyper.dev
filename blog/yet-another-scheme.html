@@ -8,41 +8,44 @@
 	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
 	<link rel="stylesheet" href="/static/highlight.css">
 	<link rel="stylesheet" href="/static/styles.css">
-	<title>hyper.dev - 2020/01/22 - Yet Another Scheme</title>
+	<title>hyper.dev - 2020/01/22 - Scheme fatigue</title>
     </head>
     <body>
         <div id="background"></div>
 	<div id="overlay">
 	</div>
 	<div id="root">
-            <h1><a href="http://localhost:8000">hyper.dev</a> <small>[<a href="http://localhost:8000/feed.xml">feed</a>] [<a href="http://localhost:8000/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
-	    <div><h1>2020/01/22 - Yet Another Scheme</h1>
-<p>For a lot of time, I have been pondering the idea of building another
-Scheme implementation.
-<a href="https://en.wikipedia.org/wiki/Five_whys">Why?</a> For what purpose?</p>
+            <h1><a href="https://hyper.dev">hyper.dev</a> <small>[<a href="https://hyper.dev/feed.xml">feed</a>] [<a href="https://hyper.dev/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
+	    <div><h1>2020/01/22 - Scheme fatigue</h1>
+<p>Scheme fatigue has two sides.  In the following I try the describe my
+views about Scheme programming language and also poke at a few other
+topics.</p>
+<p>It might not be very well structured.</p>
 <h2>Fragmentation</h2>
 <p>As far as I can tell, Scheme as a programming language is easy to the
-mind, there is a limited set (albeit sometime powerful ones) to grasp
-before being productive. Scheme is easy to maintain in the sense that
-when you come back to a piece of code (that is tested) months after
-you last checked it, it is not only possible to make sense of it, but
-also easy to rework or improve it.</p>
+mind, there is a limited set of features (albeit sometime powerful
+ones) to grasp before being productive.  Scheme is easy to maintain in
+the sense that when you come back to a piece of code (that is tested)
+months after you last checked it, it is possible to make sense of it,
+but also easy to rework or improve it.  At least, Chez Scheme has
+profiling, a step debugger, with correct source file informations and
+is efficient. Did I mention it was fast?</p>
 <p>Scheme has a healthy ecosystem of computer scientist, coders,
 standards and implementations.</p>
-<p>Many say, there is too many implementations, and that the it is bad
-luck for the programming as a whole.  I would add that there is too
-many <strong>maintained</strong> implementations.  I somewhat disagree with the
-fact that it is bad luck.  Scheme programming language describe a
-Turing-complete programming language that is easy, fun, documented,
-and grateful to implement in an interpreter or compiler.  That offers
-a clear and well documented path from apprentice to master.</p>
+<p>Many say, there is too many implementations, and that it is bad luck
+for the programming language as a whole.  I would add that there is
+many <strong>maintained</strong> implementations.  I disagree with the fact that it
+is bad luck.  Scheme programming language describes a Turing-complete
+programming language that is easy, fun, documented, and grateful to
+implement in an interpreter or a compiler.  That offers a clear and
+well documented path from apprentice to master.</p>
 <p>Too much choice, kills choice you might say; one side of the coin of
-the well-known the Scheme fatigue: which Scheme implementation should
-I pick?</p>
-<p>The answer is that you SHOULD choose: none. The <a href="http://www.scheme-reports.org/">Scheme
-Reports</a> steering committe agreed on
-fact that Scheme code ought to be be portable across implementations:</p>
-<p>&gt;</p>
+the Scheme world: which Scheme implementation should I choose?</p>
+<p>The official answer is that you should choose: none.  It makes sense
+versus <a href="https://en.wikipedia.org/wiki/Vendor_lock-in">vendor lock-in</a>.
+The <a href="http://www.scheme-reports.org/">Scheme Reports</a> steering
+committee agreed on the fact that Scheme code ought to be be portable
+across implementations:</p>
 <blockquote><p>The purpose of this work is to facilitate sharing of Scheme
 code. One goal is to be able to reuse code written in one conforming
 implementation in another conforming implementation with as little
@@ -56,42 +59,159 @@ unambiguous interpretation of its meaning.</p>
 <a href="http://r7rs.org/">R7RS</a> provide a way to create portable code.  It is
 already possible to write portable code across Scheme implementations.
 The situation can only improve.</p>
+<p>The standards help describe a path for portability, is a shared space
+to exchange ideas, good practices, innovations, and nurture
+<a href="https://en.wiktionary.org/wiki/emulation#Noun">emulation</a>.</p>
 <p>Maybe they were <a href="https://weinholt.se/articles/r7rs-vs-r6rs/">some
 disagreements</a> about
 wording, philosophy and how big or small it ought to be.  That is
 somewhat political.  At the end of the day, each Scheme implementation
-retains its defining characteristics while being Scheme.</p>
-<p>I think, <strong>fragmentation is good</strong>. <a href="https://www.gnu.org/software/guile/news/gnu-guile-300-released.html">It helps push the limits of what
-is
-Scheme</a>.</p>
-<p>The standards helps draw a path for portability across schemes, is a
-shared space to exchange ideas, good practices, innovations and
-nurture emulation.</p>
+retains its defining characteristics.  That is helpful because it
+allows the split (or share) the work to explore new ideas and
+re-explore old ideas.  It is also in the interest of commercial
+efforts because it avoids vendor lock-in.</p>
+<p><strong>Fragmentation is good</strong>.</p>
 <h2>Do It Yourself</h2>
-<p>The other side of the Scheme coin, that I dubbed Scheme fatigue, is
-the Do-It-Yourself philosophy.  It stems somewhat from the fact that
-<a href="http://lambda-the-ultimate.org/node/3312">it used to be mostly a teaching
-material</a>.  But there is
-more than that.</p>
-<p>There is also the widespread meme along the lines of</p>
+<p>The other side of the Scheme coin is the "Do It Yourself" philosophy.</p>
+<p>It stems among other things from the fact that <a href="http://lambda-the-ultimate.org/node/3312">it used to be mostly a
+teaching material</a>.</p>
+<p>There is the idea that minimalism equals small. On this topic I like
+to quote:</p>
+<blockquote><p>Programming languages should be designed not by piling feature on
+top of feature, but by removing the weaknesses and restrictions that
+make additional features appear necessary.</p>
+</blockquote>
+<p>One might say that R5RS amd R7RS-small are good enough and that
+schemes' efforts should be focused on improving and refining the ideas
+of small but powerful minimalism.  The above quote goes to the point,
+minimalism is defined as the result of the work of taking away
+spurious features.  If, to get started you have an empty set, there is
+nothing to remove, then there can be no notion of minimalism.  I
+entertain the idea that, in this regard, R6RS and the larger R7RS will
+allow to create a set of common idioms upon which Scheme will continue
+its true minimalism seeking adventure.  Prolly, R7RS will not be the
+end of minimalism, an ideal.  Maybe there will be things to take away
+from it, but as of yet, since it is not finished and because there is
+still room for experiments one can not definitly rule that R7RS-large
+is not Scheme spirit.  For instance, I think, Scheme object type
+called <code>port</code> are misleading, do not promote good programming
+practices, clutter the specification and the implementations.  I made
+recently the discovery that one can rely on procedures to mimic the
+behavior of ports in backward compatible way while re-using existing
+code and idioms.  That is, even in R5RS, there is, according to me,
+things to take away.  Without R7RS generators and accumulators, I
+would not be able to think that ports are a spurious abstraction
+coming from the past, haunting new students and seasoned engineers
+alike.  The idea behind generators is well understood and
+self-contained to the extent that it does not break the small language
+kind-of idea and keeps around the DIY philosophy that is strong within
+the Scheme community.</p>
+<p>There is the widespread meme named the <a href="http://winestockwebdesign.com/Essays/Lisp_Curse.html">Lisp
+Curse</a> along the
+lines of:</p>
 <blockquote><p>Problems that yields technical issues in other programming
 languages; with Scheme programming language, they yield social
 issues.</p>
+</blockquote>
+<p>In particular, I quote the following:</p>
+<blockquote><p>Every project has friction between members, disagreements, conflicts
+over style and philosophy. <strong>These social problems are counter-acted
+by the fact that no large project can be accomplished otherwise.</strong>
+“We must all hang together, or we will all hang separately.” But the
+expressiveness of Lisp makes this countervailing force much weaker;
+one can always start one's own project. Thus, individual hackers
+decide that the trouble isn't worth it. So they either quit the
+project, or don't join the project to begin with. This is the Lisp
+Curse.</p>
 </blockquote>
 <p>That means, that there is no problem to write the code solving any
 problem, the issue is to <strong>agree on the <a href="https://en.wikipedia.org/wiki/Worse_is_better">Good
 Thing</a></strong>. In fact, we
 do not <strong>need</strong> to agree on everything.  That is the point of Scheme.</p>
+<p>The Lisp Curse essay, try to explain that it is way too easy to do a
+fork.  I argue that we should let it be so.  <strong>I argue we should make
+it easier to fork</strong>.  Meanwhile we should <em>individually</em> strive for
+better softwares.  Better software should include rationales, tests,
+documentations.  And credits to be able to understand the lineage of
+the idea, and question whether the premise that lead to a given
+solution do still make sense.  And, only later, maybe at some point,
+some guarantees like backward compatibility, deprecation policy,
+upgrade path and long time-support story.  To put emulation,
+innovation and ideas melting at the forefront of humans goals.</p>
+<p>I put long-time support at the end because the Good Thing is to be
+able to handle things on your own.  Do it yourself.  That is the most
+important idea that underlies the free and open source movement.  That
+is what made the hop from pre-millenium based on cisor, paper and
+fossil fuel to current century possible.</p>
+<p>"Lisp Curse" inflict upon the idea that lisp will never bring back the
+good old days that are before the AI-winter.  Time traveling is not
+possible, or <a href="https://github.com/amirouche/arew-scheme/blob/d5648fbc021997e452b89a251900fc40b39ea0a6/vnstore.scm#L684">maybe there
+is</a>,
+but that does not matter.  The thing that matters is lisps have
+overcome their past daemons related to performance and efficiency.
+Actually, people (like me) have reported that their Common Lisp or
+Scheme code to be faster than the C or C++ equivalent.  Also, lisp, in
+particular Scheme has improved the maintainability of Scheme e.g.  the
+advent of <a href="https://en.wikipedia.org/wiki/Hygienic_macro">hygenic
+macros</a>, make the code
+much more readable, and more future proof.  It is a complex, maybe
+complicated idiom, but a powerful one.</p>
+<p>A consequence of the AI-winter is that lisps have, to some extent,
+lost mainstream momentum.  Yeah, there was winter, but now it is
+spring.</p>
 <p>People cooperate toward a common goal, in distributed, non-coordinated
 way, even in evil environments with non-trusted peers most of the
 time, if not, all the time e.g. human race survival.  That is, the
 <a href="https://en.wikipedia.org/wiki/The_Cathedral_and_the_Bazaar">bazaar</a>
-is the Real Thing. I don't want to down play the role of the
-cathedral: the bazaar is made of many cathedral islands, some times
-one-man endeavors, some times the feat of many.</p>
-<p>I want to stress the fact that Scheme needs to <a href="https://en.wikipedia.org/wiki/Embrace,_extend,_and_extinguish">embrace, extend and
+is the Real Thing.  Tho, I don't want to down play the role of the
+cathedral: the bazaar is made of many cathedrals, some times one-man
+lone-wolf hacker endeavors, some times the craft feat of many
+dedicated engineers.</p>
+<p>I want to stress the fact that Scheme needs to further <a href="https://en.wikipedia.org/wiki/Embrace,_extend,_and_extinguish">embrace,
+extend and
 encourage</a>
 more the distributed non-coordinated cooperation model.</p>
+<p>It is a fact that on the topic of cooperation, schemers are not at
+rest.  There is the <a href="https://srfi.schemers.org/">Scheme Request For
+Implementations</a> and
+<a href="https://en.wikipedia.org/wiki/History_of_the_Scheme_programming_language#Standardization">RnRS</a>
+standards.  More familiar to pythonistas and javascripters, more in
+the spirit of the bazaar, there is <a href="https://weinholt.se/articles/so-many-scheme-package-managers/">so many scheme package
+managers</a>.</p>
+<p>At this point, I think we agree that the lisp curse is not that bad,
+being able to fork is healthy!  In many ways, Scheme and Common Lisp
+projects by themselfs contradict the idea that it is not possible to
+build and sustain long and multi party efforts toward the goal of
+building Earth scale software systems.  I will not cite more specific
+details or particular commerical or wanna-be whole world changing
+distribution because what Scheme programming language implementations
+have achieved, are, in my opinion, valuable enough in a scope that is
+larger than the programming community itself.</p>
+<p><strong>Do-It-Yourself is good</strong>.</p>
+<h2>Conclusion</h2>
+<p>To be honest, I started the note to try to explain, first to myself,
+why I will work on a Scheme implementation that takes more inspiration
+from Python and JavaScript (but still a scheme lisp :P).  There is
+already ALOT of package managers, schemes et al.  The steering
+committee would like to see more portable Scheme code.  I am a tiny
+little spark.  I think there is definitly space for another Scheme,
+especially such as it rely on an existing compiler.  DIY philosophy,
+fighting maintream ideas like "that is NIH and wheel re-invention" and
+to some extent "good enough" and boredom has shaped the human,
+minimalism and truth seeking aventurer and bytes wrangler that I am.
+I feel much more confortable with coding even if I forgot most of
+computer science theory.  That does not mean it is useless.  I learned
+some other ((more) practical) ideas e.g. immutability,
+Continuation-Passing-Style and trampolines that I already put to good
+use.</p>
+<p>I need to decide what to do of my free time.</p>
+<p>My hearth is happy with the idea of a peer-to-peer collaboration
+system that would make it possible to fork at the function level.
+Taking inspiration from <a href="https://radicle.xyz/">radicle.xyz</a> and
+<a href="https://www.unisonweb.org/">unison</a> and why not ethereum.  It would
+also make it possible to translate definitions into your favorite
+natural language.  No more english-only programmable programming
+systems.  It looks like a gigantic hop, but awesome one.</p>
 </div>
 	</div>
         <div id="footer">
@@ -100,7 +220,7 @@ more the distributed non-coordinated cooperation model.</p>
                 feedback, or tell me what I got wrong. Please <a href="mailto:amirouche@hyper.dev">get
                 in touch</a>.
             </p>
-            <p>You might want to subscribe to the blog <a href="http://localhost:8000/feed.xml">feed</a>!</p>
+            <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
             <p>Amirouche ~ zig</p>
         </div>
     </body>
