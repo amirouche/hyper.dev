@@ -132,6 +132,10 @@ a:hover {
     padding: 15px;
 }
 
+#root {
+    background: white;
+}
+
 #root > div {
     padding: 100px 0px;
 //    background: hsla(0, 0%, 0%, 0.75);
