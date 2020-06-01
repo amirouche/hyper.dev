@@ -14,72 +14,50 @@ html {
   box-sizing: inherit;
 }
 
-/* Regular */
-@font-face {
-    font-family: 'EBGaramond';
-    src: url('EBGaramond12-Regular.ttf') format('truetype');
-    font-weight: normal;
-}
-
-
 
 /* BASICS */
 
 body {
-    font-family: 'EBGaramond', serif;
-    font-size: 28px;
-    color: black;
-    background: white;
+    font-family: sans;
+    font-size: 18px;
+    color: white;
+    padding: 50px;
 }
 
 h1 {
     font-family: 'League Gothic', Impact, sans-serif, sans;
     font-weight: normal;
-    color: black;
+    color: white;
     text-align: left;
-    font-size: 2em;
-}
-
-h1 a:link,
-h1 a:visited,
-h1 a:hover,
-h1 a:active
-{
-    text-decoration: none;
-    border: none;
+    font-size: 6em;
+    margin: 0px;
 }
 
 h2, h3, h4, h5, h6 {
     font-family: 'League Gothic', Impact, sans-serif, sans;
     font-weight: normal;
-    color: black;
+    color: white;
     text-align: left;
     margin: 0px;
 }
 
-li {
-    margin-bottom: 0.5em;
-}
-
 p {
     margin: 0px;
-    line-height: 2em;
+    line-height: 1.6em;
 }
 
 code {
-    background: hsla(0, 0%, 100%, 0.3);
+    background: hsla(0, 0%, 100%, 0.1);
     padding: 3px;
     border-radius: 3px;
 }
 
 
-
 a:link,
 a:visited,
 a:active {
-    color: black;
+    color: white;
     text-decoration: none;
-    border-bottom: 1px solid black;
 }
 
 a:hover {
@@ -89,7 +67,7 @@ a:hover {
 
 /* BACKGROUND */
 
-#background {
+#background video {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -99,13 +77,13 @@ a:hover {
     height: auto;
     z-index: -100;
     transform: translateX(-50%) translateY(-50%);
-    background: url(austerity-by-shvembldr.png) no-repeat;
+    background: url(video/poster.jpeg) no-repeat;
     background-size: cover;
 }
 
 @media screen and (max-device-width: 800px) {
-    body { background: url(austerity-by-shvembldr.png) #FFF no-repeat center center fixed;}
-    #background { display: none;}
+    body { background: url(video/poster.jpeg) #000 no-repeat center center fixed;}
+    #background { display: none; }
 }
 
 /* OVERLAY */
@@ -120,60 +98,11 @@ a:hover {
     height: auto;
     z-index: -99;
     transform: translateX(-50%) translateY(-50%);
-    // background: url(overlay-video-dark.png);
-    background: hsla(0, 100%, 100%, 0.8);
+    background: url(overlay-video-dark.png);
 }
 
 /* ROOT */
 
-#root.index {
-    padding-bottom: 100px;
-//    background: hsla(0, 0%, 0%, 0.75);
-    padding: 15px;
-}
-
 #root {
-    background: white;
-}
-
-#root > div {
-    padding: 100px 0px;
-//    background: hsla(0, 0%, 0%, 0.75);
-}
-
-#root > h1 {
-    padding: 15px;
-}
-
-#root > div > * {
-    margin: auto;
-    max-width: 888px;
-}
-
-blockquote {
-    padding: 15px;
-    background: hsla(0, 0%, 100%, 0.2);
-    margin-top: 10px !important;
-    margin-bottom: 10px !important;
-}
-
-p {
-    margin-top: 10px !important;
-    margin-bottom: 10px !important;
-}
-
-div.highlight {
-    font-size: 0.9em;
-    background: black;
-    color: white;
-    padding: 15px;
-    margin: 15px;
-}
-
-#footer {
-    max-width: 600px;
-    margin: auto;
-    margin-bottom: 100px;
-    text-align: center;
-    line-height: 2em;
+    text-align: right;
 }
