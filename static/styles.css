@@ -135,6 +135,10 @@ a:hover {
     padding: 15px;
 }
 
+#root.index > a > div {
+    text-align: center;
+}
+
 .slabtexted .slabtext
 {
     display: -moz-inline-box;
