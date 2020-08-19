@@ -4,18 +4,21 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<link rel="stylesheet" href="/static/normalize.css">
-	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
-	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
 	<link rel="stylesheet" href="/static/highlight.css">
 	<link rel="stylesheet" href="/static/styles.css">
-	<title>hyper.dev - 2015/01/01 - Recommendations basées sur les graphes</title>
+	<title>hyper.dev - Recommendations basées sur les graphes</title>
     </head>
     <body>
-        <div id="background"></div>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<!-- <source src="/static/video/space.ogv" type="video/ogg"/> -->
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
 	<div id="overlay">
 	</div>
-	<div id="root">
-            <h1><a href="https://hyper.dev">hyper.dev</a> <small>[<a href="https://hyper.dev/feed.xml">feed</a>] [<a href="https://hyper.dev/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
+	<div id="root" class="post">
 	    <div><h1>2015/01/01 - Recommendations basées sur les graphes</h1>
 <p><strong>Remarque</strong> L'API de ajgudb a changé!</p>
 <h3>Prélude</h3>
@@ -86,7 +89,7 @@ ce film».</p>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">AjguDB</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">)</span>
 
     <span class="c1"># create indices</span>
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `movies.csv` in `db/`&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `movies.csv` in `db/`&#39;</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./movies.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>  <span class="c1"># skip heading</span>
         <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">genres</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
@@ -102,7 +105,7 @@ ce film».</p>
                 <span class="p">)</span>
                 <span class="n">movie</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">genre</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;partof&#39;</span><span class="p">)</span>
 
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `ratings.csv` in `db/`&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `ratings.csv` in `db/`&#39;</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./ratings.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>  <span class="c1"># skip heading</span>
         <span class="k">for</span> <span class="n">userid</span><span class="p">,</span> <span class="n">movieid</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">timestamp</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
@@ -115,7 +118,7 @@ ce film».</p>
             <span class="n">props</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">timestamp</span><span class="p">))</span>
             <span class="n">rating</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">movie</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;rating&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">props</span><span class="p">)</span>
 
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `tags.csv` in `db/`&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting load of `tags.csv` in `db/`&#39;</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./tags.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>  <span class="c1"># skip heading</span>
         <span class="k">for</span> <span class="n">userid</span><span class="p">,</span> <span class="n">movieid</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">timestamp</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
@@ -126,7 +129,7 @@ ce film».</p>
             <span class="n">props</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
             <span class="n">tag</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">movie</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;tag&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">props</span><span class="p">)</span>
 
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;closing&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;closing&#39;</span><span class="p">)</span>
     <span class="n">graph</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 <p>Ça c'est fait!</p>
@@ -271,7 +274,7 @@ recommender aux gens qui ont aimé Toy Story :)</p>
 <span class="n">movie</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">one</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Toy Story (1995)&#39;</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sort</span><span class="p">(</span><span class="n">likes</span><span class="p">(</span><span class="n">liked_by</span><span class="p">(</span><span class="n">movie</span><span class="p">))):</span>
-    <span class="k">print</span> <span class="n">item</span>
+    <span class="nb">print</span> <span class="n">item</span>
 </pre></div>
 <p>Et voilà!</p>
 </div>
@@ -283,7 +286,7 @@ recommender aux gens qui ont aimé Toy Story :)</p>
                 in touch</a>.
             </p>
             <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
-            <p>Amirouche ~ zig</p>
+            <p>Amirouche ~ arew</p>
         </div>
     </body>
 </html>

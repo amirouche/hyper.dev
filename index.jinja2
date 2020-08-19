@@ -5,22 +5,52 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<link rel="alternate" type="application/rss+xml" title="hyper.dev" href="{{ base }}/feed.xml" />
 	<link rel="stylesheet" href="/static/normalize.css">
-	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
-	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
 	<link rel="stylesheet" href="/static/styles.css">
 	<title>hyper.dev</title>
     </head>
     <body>
-        <div id="background"></div>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<!-- <source src="/static/video/space.ogv" type="video/ogg"/> -->
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
 	<div id="overlay">
 	</div>
-	<div id="root" class="index">
-	    <h1><a href="{{ base }}">hyper.dev</a> <small>[<a href="{{ base }}/feed.xml">feed</a>] [<a href="{{ base }}/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
-	    <ul>
-		{% for post in posts %}
-		    <li><a href="{{ base }}/blog/{{post['filename']}}">{{ post['title'] }}</a></li>
-		{% endfor %}
-	    </ul>
+	<div id="root" class="index grid" data-masonry='{ "itemSelector": ".grid-item", "columnWidth": 320 }'>
+            <a class="grid-item" href="{{ base }}">
+	        <h1>hyper.dev</h1>
+            </a>
+            <div class="grid-item">
+                <a href="{{ base }}/feed.xml">feed</a>
+            </div>
+	    {% for post in posts %}
+		<a href="{{ base }}/blog/{{post['filename']}}" class="grid-item">
+                    <div>
+                        <h2>{{ post['title'] }}</h2>
+                    </div>
+                </a>
+	    {% endfor %}
 	</div>
+        <script src="/static/jquery.min.js"></script>
+        <script src="/static/masonry.pkgd.min.js"></script>
+        <script src="/static/jquery.slabtext.min.js"></script>
+        <script>
+         // Function to slabtext the LI
+         function init() {
+             $("h2").slabText({
+                 "viewportBreakpoint":380
+             });
+
+             var msnry = new Masonry( '.grid', {
+                 itemSelector: '.grid-item',
+                 columnWidth: 15
+             });
+
+         };
+         
+         $(init);
+        </script>
     </body>
 </html>

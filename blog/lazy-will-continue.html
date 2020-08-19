@@ -4,18 +4,21 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<link rel="stylesheet" href="/static/normalize.css">
-	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
-	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
 	<link rel="stylesheet" href="/static/highlight.css">
 	<link rel="stylesheet" href="/static/styles.css">
-	<title>hyper.dev - 2015/01/01 - Lazy will continue</title>
+	<title>hyper.dev - Lazy will continue</title>
     </head>
     <body>
-        <div id="background"></div>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<!-- <source src="/static/video/space.ogv" type="video/ogg"/> -->
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
 	<div id="overlay">
 	</div>
-	<div id="root">
-            <h1><a href="https://hyper.dev">hyper.dev</a> <small>[<a href="https://hyper.dev/feed.xml">feed</a>] [<a href="https://hyper.dev/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
+	<div id="root" class="post">
 	    <div><h1>2015/01/01 - Lazy will continue</h1>
 <p>Cette citation de Bob Marlisp est complètement à propos de
 continuation de séquences paresseuses en scheme.</p>
@@ -127,27 +130,27 @@ Javascript:</p>
     <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
 
 <span class="n">value</span><span class="p">,</span> <span class="nb">next</span> <span class="o">=</span> <span class="n">multiple_of_three</span><span class="p">()</span>
-<span class="k">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 <span class="n">value</span><span class="p">,</span> <span class="nb">next</span> <span class="o">=</span> <span class="nb">next</span><span class="p">()</span>
-<span class="k">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 <span class="n">value</span><span class="p">,</span> <span class="nb">next</span> <span class="o">=</span> <span class="nb">next</span><span class="p">()</span>
-<span class="k">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 <p>Remarque: les deux langages ont déjà un moyen beaucoup plus simple de
 faire ce genre de chose à l'aide de leur yield respectif, exemple en
 Python:</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">multiple_of_three</span><span class="p">():</span>
     <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">n</span>
         <span class="n">n</span> <span class="o">+=</span> <span class="mi">3</span>
 
 
 <span class="n">generator</span> <span class="o">=</span> <span class="n">multiple_of_three</span><span class="p">()</span>
 
-<span class="k">print</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
-<span class="k">print</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
-<span class="k">print</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
 </pre></div>
 <p>En javascript, avec une version recente de node et le flag --harmony
 cela donne:</p>
@@ -254,7 +257,7 @@ controles qui peuvent être implementé à l'aide de <em>call/cc</em>.</p>
                 in touch</a>.
             </p>
             <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
-            <p>Amirouche ~ zig</p>
+            <p>Amirouche ~ arew</p>
         </div>
     </body>
 </html>

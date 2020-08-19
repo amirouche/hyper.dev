@@ -4,18 +4,21 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<link rel="stylesheet" href="/static/normalize.css">
-	<link rel="stylesheet" href="/static/fonts/texgyrepagella-regular/stylesheet.css">
-	<link rel="stylesheet" href="/static/fonts/leaguegothic.css">
 	<link rel="stylesheet" href="/static/highlight.css">
 	<link rel="stylesheet" href="/static/styles.css">
-	<title>hyper.dev - 2017/01/01 - En avant le web avec Python 3</title>
+	<title>hyper.dev - En avant le web avec Python 3</title>
     </head>
     <body>
-        <div id="background"></div>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<!-- <source src="/static/video/space.ogv" type="video/ogg"/> -->
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
 	<div id="overlay">
 	</div>
-	<div id="root">
-            <h1><a href="https://hyper.dev">hyper.dev</a> <small>[<a href="https://hyper.dev/feed.xml">feed</a>] [<a href="https://hyper.dev/Amirouche.BOUBEKKI.2020.pdf">resume</a>]</small></h1>
+	<div id="root" class="post">
 	    <div><h1>2017/01/01 - En avant le web avec Python 3</h1>
 <p>A l'approche de la <a href="https://www.pycon.fr/2017/">pycon france 2017</a> (à
 Toulouse (du 21 au 24 Septembre)). Je reflechissait à proposer une
@@ -59,8 +62,8 @@ peut apparaitre à l'interieur de cette fonction. <code>async</code> est utilis�
 dans <code>asyncio</code> pour declarer une fonction asynchrone. <code>await</code> est
 utilisé pour appeller une fonction asynchrone. Typiquement votre code
 va ressembler à quelque chose comme ça:</p>
-<div class="highlight"><pre><span></span><span class="n">async</span> <span class="k">def</span> <span class="nf">ma_fonction_asynchrone</span><span class="p">():</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">await</span> <span class="n">une_autre_fonction_asynchrone</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">ma_fonction_asynchrone</span><span class="p">():</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="k">await</span> <span class="n">une_autre_fonction_asynchrone</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">out</span>
 </pre></div>
 <p>Mais j'ai dit qu'on en avait rien à faire de la programmation
@@ -176,7 +179,7 @@ bio. Je met en place la partie métier spécifique kivabien:</p>
 
 <span class="c1"># ajouter les routes kivonbien</span>
 <span class="n">business</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;POST&#39;</span><span class="p">,</span> <span class="s1">&#39;/command&#39;</span><span class="p">,</span> <span class="n">handle_command</span><span class="p">)</span>
-<span class="n">business</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;/receipt/{id}/&#39;</span><span class="p">,</span> <span class="n">handle_receipt</span><span class="p">)</span>
+<span class="n">business</span><span class="o">.</span><span class="n">add_route</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;/receipt/</span><span class="si">{id}</span><span class="s1">/&#39;</span><span class="p">,</span> <span class="n">handle_receipt</span><span class="p">)</span>
 
 <span class="n">painbio</span><span class="o">.</span><span class="n">add_subapp</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">business</span><span class="p">)</span>
 </pre></div>
@@ -217,7 +220,7 @@ faire quoi que se soit en Python sur mon temps libre.</p>
                 in touch</a>.
             </p>
             <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
-            <p>Amirouche ~ zig</p>
+            <p>Amirouche ~ arew</p>
         </div>
     </body>
 </html>
