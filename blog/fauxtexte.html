@@ -20,8 +20,12 @@
 	</div>
 	<div id="root" class="post">
 	    <div><h1>2020/08/19 - fauxtexte</h1>
-<p>fauxtexte is a fake text generator based on markov chains.</p>
+<ul>
+<li>fauxtexte is a <em>fake text generator</em> based on markov chains.</li>
+<li>153 lines of code.</li>
+</ul>
 <h2>Getting started</h2>
+<p>Here is the usage help text:</p>
 
 <div><pre># fauxtexte
 Usage:
@@ -30,7 +34,7 @@ Usage:
   generate INPUT [SOME FUN ...]</pre></div>
 <ul>
 <li><p><code>fauxtexte learn INPUT OUTPUT</code> will learn the vocabulary. <code>INPUT</code> is
-supposed to be a texte file with a single phrase per line. <code>OUTPUT</code>
+supposed to be a text file with a single phrase per line. <code>OUTPUT</code>
 will be the name of the generated model.  You can call multiple time
 <code>learn</code> with different <code>INPUT</code> but the same <code>OUTPUT</code>.</p>
 </li>
@@ -43,8 +47,6 @@ in this command is the name you passed as <code>OUTPUT</code> in the above!</p>
 
 <div><pre># ./fauxtexte learn data/scheme-2020-04.txt model.fauxtexte
 done!
-# ./fauxtexte generate model.fauxtexte "% scheme is"
-% scheme is
 # ./fauxtexte generate model.fauxtexte % scheme is
 % scheme is pascal and pascal is fortran
 # ./fauxtexte generate model.fauxtexte % scheme is
@@ -52,14 +54,14 @@ done!
 # ./fauxtexte generate model.fauxtexte % scheme is
 % scheme is appropriate in your redefinitions</pre></div>
 <p>The <code>%</code> in the <code>fauxtexte generate</code> command will instruct the program
-to try to start, otherwise it can pick any word it learned from
-anywhere in a sentence.</p>
+to try to start with the beginning of known sentences, otherwise it
+can pick any word it learned from anywhere in a sentence.</p>
 <h2>ChangeLog</h2>
 <ul>
-<li><p>2020/08: v0.0.0 - initial release</p>
+<li><p>2020/08/19: v0.0.0 - initial release</p>
 <ul>
-<li><a href="/bin/fauxtexte/alpine/0.0.0/fauxtexte">alpine binary</a></li>
-<li><a href="/bin/fauxtexte/debian/buster/0.0.0/fauxtexte">ubuntu / debian</a></li>
+<li><a href="/bin/fauxtexte/alpine/0.0.0/fauxtexte">alpine</a></li>
+<li><a href="/bin/fauxtexte/debian/buster/0.0.0/fauxtexte">debian buster</a></li>
 </ul>
 </li>
 </ul>

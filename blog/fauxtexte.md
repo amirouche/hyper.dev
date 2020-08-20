@@ -1,8 +1,11 @@
 # 2020/08/19 - fauxtexte
 
-fauxtexte is a fake text generator based on markov chains.
+- fauxtexte is a *fake text generator* based on markov chains.
+- 153 lines of code.
 
 ## Getting started
+
+Here is the usage help text:
 
 ```
 # fauxtexte
@@ -13,7 +16,7 @@ Usage:
 ```
 
 - `fauxtexte learn INPUT OUTPUT` will learn the vocabulary. `INPUT` is
-  supposed to be a texte file with a single phrase per line. `OUTPUT`
+  supposed to be a text file with a single phrase per line. `OUTPUT`
   will be the name of the generated model.  You can call multiple time
   `learn` with different `INPUT` but the same `OUTPUT`.
   
@@ -26,8 +29,6 @@ Here is an example run:
 ```
 # ./fauxtexte learn data/scheme-2020-04.txt model.fauxtexte
 done!
-# ./fauxtexte generate model.fauxtexte "% scheme is"
-% scheme is
 # ./fauxtexte generate model.fauxtexte % scheme is
 % scheme is pascal and pascal is fortran
 # ./fauxtexte generate model.fauxtexte % scheme is
@@ -37,12 +38,12 @@ done!
 ```
 
 The `%` in the `fauxtexte generate` command will instruct the program
-to try to start, otherwise it can pick any word it learned from
-anywhere in a sentence.
+to try to start with the beginning of known sentences, otherwise it
+can pick any word it learned from anywhere in a sentence.
 
 ## ChangeLog
 
-- 2020/08: v0.0.0 - initial release 
+- 2020/08/19: v0.0.0 - initial release 
 
-  - [alpine binary](/bin/fauxtexte/alpine/0.0.0/fauxtexte)
-  - [ubuntu / debian](/bin/fauxtexte/debian/buster/0.0.0/fauxtexte)
+  - [alpine](/bin/fauxtexte/alpine/0.0.0/fauxtexte)
+  - [debian buster](/bin/fauxtexte/debian/buster/0.0.0/fauxtexte)
