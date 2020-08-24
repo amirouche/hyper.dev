@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - Common Crawl Search Engine</title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<!-- <source src="/static/video/space.ogv" type="video/ogg"/> -->
+		<source src="/static/video/space.mp4" type="video/mp4"/>
+		<source src="/static/video/space.webm" type="video/webm"/>
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root" class="post">
+	    <div><h1>2020/08/24 - Common Crawl Search Engine</h1>
+<ul>
+<li>ccse will search for keywords in <a href="https://commoncrawl.org/">Common Crawl datasets</a></li>
+<li>188 + 291 (aho-corasick algorithm) = 479 lines of code.</li>
+</ul>
+<h2>Getting started</h2>
+
+<div><pre># wget https://commoncrawl.s3.amazonaws.com/crawl-data/CC-MAIN-2018-26/segments/1529267859766.6/wet/CC-MAIN-20180618105733-20180618125538-00026.warc.wet.gz
+...
+# gunzip CC-MAIN-20180618105733-20180618125538-00026.warc.wet.gz
+...
+# ccse CC-MAIN-20180618105733-20180618125538-00026.warc.wet keyword search engine
+...
+# time ./ccse.scm  CC-MAIN-20180618105733-20180618125538-00026.warc.wet keyword search engine &gt; out.txt
+
+real    0m 12.67s
+user    0m 12.54s
+sys 0m 0.10s</pre></div>
+<h2>ChangeLog</h2>
+<ul>
+<li><p>2020/08/24: v0.1.0 - initial release</p>
+<ul>
+<li><a href="/bin/ccse/alpine/v0.1.0/ccse">alpine</a></li>
+<li><a href="/bin/ccse/debian/buster/v0.1.0/ccse">debian buster</a></li>
+</ul>
+</li>
+</ul>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me what I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche ~ arew</p>
+        </div>
+    </body>
+</html>
