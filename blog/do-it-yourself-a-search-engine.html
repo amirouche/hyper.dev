@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - Do It Yourself: A Search Engine</title>
+    </head>
+    <body>
+	<div id="background">
+	    <video autoplay loop poster="/static/video/poster.jpeg">
+		<!-- <source src="/static/video/space.ogv" type="video/ogg"/> -->
+		<!-- <source src="/static/video/space.mp4" type="video/mp4"/>
+		     <source src="/static/video/space.webm" type="video/webm"/> -->
+	    </video>
+	</div>
+	<div id="overlay">
+	</div>
+	<div id="root" class="post">
+	    <div><h1>2020/10/12 - Do It Yourself: A Search Engine</h1>
+<h2>Prelude</h2>
+<p>I read more often than ever that people are looking for ways to build
+their own search engines.</p>
+<p>Even if more on more "advanced" features are integrated into search
+engines.  They are mostly based on human grunt work.  Semantic search
+engine, whatever "semantic" does mean for you, is in fact merely a
+couple, not more than a dozen, set of tricks.  I like to say, much of
+Google's search engine is good old human labor.  If you still doubt
+it, here is again: Google results are not only biased, also they are
+editorialized.  Whether algorithms, and their bugs, party is
+irrelevant.</p>
+<p>My point is: it is human made.  Not some necessarly advanced alien
+tool.</p>
+<p>The only thing preventing you to have your own search engine is there
+is no readily available software, why? because there is no cheap
+hardware.</p>
+<p>This might sound like a crazy idea five or ten years ago, but with the
+advent of AMD threadripper ie. <a href="http://cultureandempire.com/html/cande.html">cost gravity at
+play</a> getting together a
+personal search engine is, if not a necessity, at least a possibility.</p>
+<p>The most common complain I read about Google is that it yields
+irrelevant text "that do no even contain my search terms". That is not
+a bug, that is a feature!  It seems to me the subtext is that you can
+not easily customize Google or whatever search algorithm since it is
+privative.  Even retrieving Google search results for further
+processing if not forbidden, is at least difficult.</p>
+<h2>Getting started</h2>
+<p>Let's start with the beginning: what is a search engine? A search
+engine is software that will <strong>crawl</strong> the Internet, <strong>index</strong>
+ie. store the text in a particular format, and that users can
+<strong>query</strong> and receive in return the most relevant text.</p>
+<p>Let's dive into what "relevant text" means. What is relevant text?</p>
+<ol>
+<li>A text that contains the search term in my query</li>
+<li>A text that has the same topic as my query</li>
+<li>A text that gives an answer to my query</li>
+</ol>
+<p>The good answer is "it depends".  That's why queries have grown from
+keywords match like a book index, to boolean queries e.g. <code>"Apple"
+-bible</code>, until so called semantic search, which boils down to consider
+one-way or two-way synonyms and other lexical features.</p>
+<p>So far, I failed to build a crawler that works.  Also much of the text
+I am looking for is in wikipedia or StackOverflow for which they are
+flat releases which are much more easy to get started than putting
+together your own crawler.  Still, they are some crawler around, so
+you can use that or learn from it.  I will not dive into the crawler
+part because it still hurts when I think about <code>robots.txt</code>,
+throttling, text encoding etc... booooh!</p>
+<p>So, we will imagine that you have a dataset of plain text, for
+instance wikipedia vital articles.  It helps if you know the content
+of the dataset.  Querying random news article is not very easy to
+grasp because you have to read (!) the text to figure when and how
+they are relevant.</p>
+<p>Before querying, you need to store the text, but to know <strong>how</strong> to
+store the text you need to know which query feature you want. To get
+started I will only consider positive keywords and negative keywords
+like <code>apple -bible</code>. So, we need to figure which find out which text
+contains the word <code>apple</code> but not the word <code>bible</code>. Looking up
+everything that does not contain <code>bible</code> is difficult, you would need
+to <strong>scan</strong> the whole database to what are those document. Instead we
+will look for documents that contains the word <code>apple</code>.  So the
+following document contains the word we are looking for:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="nv">doc1</span> <span class="s">&quot;apple is looking for a search engine.&quot;</span><span class="p">)</span>
+</pre></div>
+<p>That is the moment where the most advanced technology of our current
+century makes it appearance: the inverted index.  <strong>What is an inverted
+index? It reverses the relationship between the document and the word</strong>.
+Instead of saying "this document contains the word apple" it says
+"apple is contained in this document".  So we might have a procedure
+that returns the document identifier that contains <code>apple</code>, like:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">assert</span> <span class="p">(</span><span class="nf">contains?</span> <span class="p">(</span><span class="nf">inverted-index-lookup</span> <span class="s">&quot;apple&quot;</span><span class="p">)</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+<p><code>inverted-index-lookup</code> returns a list, and that list contains the identifier <code>1</code>
+of the first document.  That list might be big. So <strong>you want to consider the least common word from the query</strong>. I call that step
+<em>candidates selection</em>.  Also, you might want to convert the positive terms
+into lemmas or stems to go toward semantic search, which will mean you need
+to store lemmas or stems at index time.</p>
+<p>Anyway, the next step, given the list of documents that contain the
+least common word or term or lemma or stem, is to <strong>filter and score</strong>
+according to the full query. In the above case, that is remove the
+documents that contains <code>bible</code>.  You can do that step serially, and
+it will necessarly take time.  The trick is to use <code>for-each-par-map</code>.
+That is a cousin of map-reduce that execute the map procedure in
+parallel.</p>
+<p>For instance something like:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">hits</span> <span class="o">&#39;</span><span class="p">()))</span>
+  <span class="p">(</span><span class="nf">for-each-par-map</span>
+    <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">uid</span> <span class="nv">score</span><span class="p">)</span> <span class="p">(</span><span class="nf">when</span> <span class="nv">score</span> <span class="p">(</span><span class="k">set! </span><span class="nv">hits</span> <span class="p">(</span><span class="nf">take</span> <span class="mi">10</span> <span class="p">(</span><span class="nf">sort</span> <span class="p">(</span><span class="nb">cons </span><span class="p">(</span><span class="nb">cons </span><span class="nv">uid</span> <span class="nv">score</span><span class="p">)</span> <span class="nv">hits</span><span class="p">))))))</span>
+    <span class="nv">score</span> <span class="p">(</span><span class="nf">inverted-index-lookup</span> <span class="s">&quot;apple&quot;</span><span class="p">))</span>
+  <span class="nv">hits</span><span class="p">)</span>
+</pre></div>
+<p>The score function is interesting. I think going the
+<a href="https://github.com/abusix/ahocorapy">aho-corasick</a> with a
+<a href="https://medium.com/analytics-vidhya/converting-boolean-logic-decision-trees-to-finite-state-machines-180ad195abf2">FSM</a>
+is the best route because it is easy to implement proximity scoring,
+"phrase matching", or really anything I can think of.</p>
+<blockquote><p>⚠ That last paragraph is really the most important part of this
+post.</p>
+</blockquote>
+<h2>Conclusion</h2>
+<p>There is a gigantic leap that is going to happen in search because of
+hardware availability, and free software with readable source ie. the
+only thing that makes human progress possible: knowledge sharing.</p>
+<h2>Malfunction! Need input!</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Tf%E2%80%93idf">https://en.wikipedia.org/wiki/Tf%E2%80%93idf</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Precision_and_recall">https://en.wikipedia.org/wiki/Precision_and_recall</a></li>
+<li><a href="https://hal.archives-ouvertes.fr/hal-01730479/document">https://hal.archives-ouvertes.fr/hal-01730479/document</a></li>
+<li><a href="https://wiki.nikitavoloboev.xyz/web/search-engines">https://wiki.nikitavoloboev.xyz/web/search-engines</a></li>
+<li><a href="https://github.com/amirouche/babelia">https://github.com/amirouche/babelia</a></li>
+</ul>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me what I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche ~ arew</p>
+        </div>
+    </body>
+</html>
