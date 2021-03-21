@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - mutation: review & rework of mutmut</title>
+    </head>
+    <body>
+	<div id="root" class="post">
+	    <div><h1>2021/01/31 - mutation: review &amp; rework of mutmut</h1>
+<p><img src="https://images.unsplash.com/photo-1596079320875-ff665fa4a5dc?ixlib=rb-1.2.1&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb&amp;w=1024" alt=""></p>
+<p>A coworker told me about mutation testing, I was immediately
+interested because testing is interesting. Testing became even more
+interesting when I read how FoundationDB was made. I recommend you
+watch the video about testing with deterministic simulation.</p>
+<p>I started looking into <a href="https://github.com/boxed/mutmut">mutmut</a> and a fork
+that adds parallel runs support... eventually I though: <a href="https://hackernoon.com/mutmut-a-python-mutation-testing-
+system-9b9639356c78">how hard can it
+be?</a></p>
+<p>Yeah, you might think that is my thing, and that is the thing of many
+(most?) developers starting on a new project: "the code is evil,
+let's rewrite!". And that is somewhat the idea behind this series of
+logs, so I will not say I am not into "rewrites" myself (more on that
+later).</p>
+<p>I went swiftly through all projects that pop'ed in google first page
+result, and still was interested to rewrite. Let's dive deeper into
+those projects.</p>
+<p>Instead of an introduction to mutation testing, let our imagination
+play with the following nice track from Disiz Peter Punk called
+Mutation:</p>
+<p><a href="https://www.youtube.com/watch?v=ihZEaj9ml4w">Disiz Peter Punk Intro Mutation</a></p>
+<blockquote><p>Standing on the shoulders of giants</p>
+</blockquote>
+<h2>mutmut</h2>
+<p>After my initial review, mutmut seemed like the most straightforward
+except the fact that you can no run tests in parallel but there is a
+fork that does.  The code is another story. I will go through the
+<a href="https://github.com/boxed/mutmut/pull/195">fork</a> because it is the
+code that I am most interested in.</p>
+<h3><code>cache.py</code></h3>
+<p>In no particular order:</p>
+<ul>
+<li><p>I am still clueless about what is the point short lines of text as
+global variables,</p>
+</li>
+<li><p>I am an early fan of Object-Relation-Mapper, and I changed my
+mind. I want to stress that <a href="https://news.ycombinator.com/item?id=14826496">I am not the only one to find the ORM
+abstraction dubious</a>.</p>
+</li>
+<li><p>init_db is way too much indented and score 7 level of indentations.</p>
+</li>
+<li><p>If we dive into init_db we figure that it is a decorator, hence it
+is not as evil as I was thinking to nest function definition. Nested
+function definition do not play nice with the module pickle. It is
+also painful from a performance perspective because the CPython VM
+will not optimize it (closure allocation, useless free variables and
+even the function definition that will be re- computed and
+re-instanciated everytime the VM goes through init_db. The situation
+is worse when a class is allocated at runtime).</p>
+</li>
+<li><p>Re init_db, the first branch of the if should return early. That is
+a case where "Do not Repeat Yourself" is harmful.</p>
+</li>
+<li><p>The except OperationalError: pass is dubious.</p>
+</li>
+<li><p>There is other problems with code details, but really the big design
+mistake is to make database initialization something
+unpredictable. initdb will decorate database function and initialize
+the database once and only once the first time one of the cache (!)
+function is called. From experience, it is much better to have a
+dedicated function e.g. the function called wrapper called at every
+entry points of the program or programs.</p>
+</li>
+<li><p>Also db object is a global variable instanciateed from
+pony.orm.Database at the top-level. I will not spend time discussion
+slow global variable access with CPython, instead ask myself, why the
+database initialization is not done at that point.</p>
+</li>
+</ul>
+<ul>
+<li><p>The good thing in this code is that it <a href="https://docs.ponyorm.org/transactions.html">use
+transaction</a> (even if the
+name is not explicit)</p>
+</li>
+<li><p>A small nitpick the following code is difficult to test:</p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hash_of</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+</pre></div>
+<p>Because it rely on a side-effect open the good abstraction if one is
+necessary, is a sugar (!) that takes bytes as arguments and computes
+the digest:</p>
+
+<div><pre>def sha256sum(bytes):
+    m = hashlib.sha256()
+    m.update(bytes)
+    out = m.hexdigest()
+    return out</pre></div>
+<p>The function sha256sum is very easy to tests, no need to fiddle with on disk
+files during testing.</p>
+<ul>
+<li><p>In hash_of_tests: Modern python code should use pathlib.Path and
+glob pattern matching.</p>
+</li>
+<li><p>The whole thing could be re-written as a list comprehension and a
+proper use of a helper function.</p>
+</li>
+<li><p><code>found_something</code> is not necessary, it should be an independent
+predicate. I am not a great fan of exceptions, but return
+NO_TESTS_FOUND would be written as raise SomeException in pythonic
+code (in the case where there is no predicate that guard the hash
+computation).</p>
+</li>
+<li><p>print_result_cache has too many arguments and is too much nested (maybe use a
+dataclass?)</p>
+</li>
+<li><p>sorted(iterable) == list(sorted(iterable)) the list is spurious, it just does
+copy the list created by sorted.</p>
+</li>
+<li><p>itertools.groupby takes a sorted iterable as argument.</p>
+</li>
+<li><p>create_html_report does not follow the "separation of concerns"
+principles. It should really be at least two function 1) one to gather
+the data 2) another to render the html</p>
+</li>
+<li><p>Overall, the functions that are really related to the database take
+high level abstractions that makes it a) difficult to test b) force
+the data access layer to do operations that are not really data
+related (like preparing the actual values to create, read, update or
+delete) c) basic data types are easier to debug (except generators).</p>
+</li>
+<li><p>I frown upon the use of getattr</p>
+</li>
+</ul>
+<p>I like the idea of <a href="http://cache.py/">cache.py</a> but the name is not
+well chosen, I prefer <a href="http://db.py/">db.py</a> or something like
+<a href="http://dal.py/">dal.py</a> for data access layer.</p>
+<h3><code>__init__.py</code></h3>
+<p>I start to think having code in <strong>init</strong>.py is not as evil as I
+though, I might just be biased because of my experience with Django in
+the early days.</p>
+<ul>
+<li>RelativeMutationID would be a good case of a dataclass.</li>
+<li>Again a lot of indentation.</li>
+<li>mutant_statuses would make a good Enum</li>
+<li>Ha! <code>**_</code>: it looks like a snake with big glasses!</li>
+<li>All the mutation function and sort-of framework could use their own file.</li>
+<li>The use of Context instances is broad and large in the code base but
+there is no docstring. It seems to be a configuration, with a lot of
+@property . Note: I consider @property harmful. dataclass? dict?</li>
+</ul>
+<p>The following pattern:</p>
+<div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">something</span><span class="p">()</span>
+<span class="k">except</span> <span class="n">SomethingException</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;something that wants to be useful&quot;</span><span class="p">)</span>
+    <span class="k">raise</span>
+</pre></div>
+<p>The above is useless. Instead of print it is better to comment the code and
+avoid the try / except.</p>
+<ul>
+<li><p>In my opinion multi-line strings are painful. I prefer to use msg +=
+line especially when I end up with a multi-line statement like raise
+ProgrammingError(msg)</p>
+</li>
+<li><p>mutate_node is almost two page long, with a very important code at
+the end. It would be easier to read such as:</p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mutate_code</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">maybe_mutate_code</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+    <span class="n">contexte</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</pre></div>
+<p>An even better pattern is to use a context manager.</p>
+<ul>
+<li>Config vs. Context ?!</li>
+</ul>
+<h3><code>__main__.py</code></h3>
+<p>That is the cli definition with the library called click that is not
+my favorite library, I believe it is better to keep thing simple hence
+I rely on docopt that does less magic (!) and gives you more control
+(also,
+<a href="https://github.com/boxed/mutmut/issues/193#issuecomment-744015892">docopt</a><a href="https://github.com/boxed/mutmut/issues/193#issuecomment-744015892">
+does display all
+options</a>).
+Interface are complex topic, and I have no definitive answer regarding
+cli.</p>
+<h3><code>loader.py</code></h3>
+<p>install will create a class object on the fly without directly relying
+on type with top-level functions passed as arguments. That is a
+performance optimization, but when the time of execution is several
+days, most milliseconds matters.</p>
+<p>Relative imports are difficult to read.</p>
+<h2>cosmic-ray</h2>
+<p>Next I looked at cosmic-ray mostly because there was an exchange
+between cosmic-ray's maintainer and mutmut's maintainer and I wanted
+to see by myself what was the problem. I do my review a few month or
+years after that exchange happened so the situation is different.</p>
+<p>Spoiler: I find the code of cosmic-ray better, I disagree that the
+mutations are not easy to extract and use them independently (except
+that it requires to dive into openstack libraries, but that ought to
+be good thing right !</p>
+<p>The only thing I disagree with is the fact it rely on Celery (how hard
+can it be.  Celery in that case is not necessary, because it is easier
+to rely on multiprocessing, also even more so nowadays it is easier to
+setup and configure a single machine with 20, 40 or even 128 thread
+cores than the equivalent infrastructure with multiple machines. Also
+less costly.</p>
+<p>On the subject of server costs, it is a perfect time to share the following
+blog post:</p>
+<p><a href="https://cerebralab.com/Is_a_billion-
+dollar_worth_of_server_lying_on_the_ground">Cerebralab Blog Note: Some details of the stories in this article are
+slightly altered to protect the privacy of the companies I worked for It's
+somewhat anecdotal, but in my work, I often encounter projects that seem to
+use highly inefficient infrastructure providers, from a cost perspective.
+https://cerebralab.com/Is_a_billion-dollar_worth_of_server_lying_on_the_ground
+<img src="/logo.png" alt=""></a></p>
+<p>There is some interesting library in the requirements like yattag
+which is not my favorite in-python html templating library but still
+an interesting take, also stevedore should be the subject of follow up
+review!</p>
+<p>The code is rather short with 2196 python lines of code. The code look
+visually nice, and is well commented. It use log as the variable name
+that holds the python logger, hence I am not the only one to do that.</p>
+<p>There is a few mistakes here and there, but the overall code is good!</p>
+<p>I recommend to read cosmic-ray code if you are getting started with Python!</p>
+<h2>Others</h2>
+<p>I did not have time to review the following projects:</p>
+<ul>
+<li><p><a href="https://github.com/EvanKepner/mutatest">EvanKepner/mutatest Are you confident in your tests? Try out mutatest and
+see if your tests will detect small modifications (mutations) in the code.
+Surviving mutations represent subtle changes that are undetectable by your
+tests. These mutants are potential modifications in source code that
+continuous integration checks would miss.</a></p>
+</li>
+<li><p><a href="https://github.com/mutpy/mutpy">mutpy/mutpy MutPy is a mutation testing tool for Python 3.x source code -
+mutpy/mutpy!</a></p>
+</li>
+</ul>
+<h2>Rework</h2>
+<ul>
+<li><p>Unlike the maintainer of mutmut I think that parallel testing is a
+requirement for this kind of tool.</p>
+</li>
+<li><p>Unlike cosmic-ray's maintainer I think Celery is overkill (mind the
+fact that Celery is an add-on in cosmic-ray)</p>
+</li>
+<li><p>Deterministic behaviors are a good thing, and mutmut seems to miss that.</p>
+</li>
+<li><p>mutmut seems to rely on sampling, but there is no way to control it.</p>
+</li>
+<li><p>Again the process to test 15k lines of source code takes around 24
+hours on my side even with the fork that use a thread-pool. More
+optimizations? Yes, maybe, but more importantly, it would be nice to
+be able to have a look at the results while the process is running
+with a cli or better with a feature creep web interface.</p>
+</li>
+</ul>
+<p>Overall I am happy with the result, except the following:</p>
+<ul>
+<li><p>I could use multiple module files especially for the class
+describing the mutations.</p>
+</li>
+<li><p>Some functions could use better names.</p>
+</li>
+<li><p>I need to replace the use of the imp package.</p>
+</li>
+</ul>
+<p>Last but not least, I need to replace parso with Python 3.9 ast
+because it produce less noisy mutations.</p>
+<p>forge at <a href="https://git.sr.ht/~amirouche/mutation">~amirouche/mutation</a>.</p>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me that I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="http://127.0.0.1:8000//feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche</p>
+        </div>
+    </body>
+</html>

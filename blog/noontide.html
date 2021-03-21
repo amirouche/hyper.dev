@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - noontide: review & rework of loconotion</title>
+    </head>
+    <body>
+	<div id="root" class="post">
+	    <div><h1>2021/01/09 - noontide: review &amp; rework of loconotion</h1>
+<p><img src="https://images.unsplash.com/photo-1598645259510-08d6b5ffd7ac?ixlib=rb-1.2.1&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb&amp;w=1024" alt="locomotive"></p>
+<p><a href="https://github.com/leoncvlt/loconotion/">Loconotion</a> is a python
+program that allows to generate a static website from a
+<a href="http://notion.so/">notion.so</a> page.</p>
+<h2>Review</h2>
+<p>Loconotion is a great tool to build a website from a notion page. The
+only user experience problem is the absence of
+<a href="http://pypi.org/">pypi.org</a> package so that you can just <code>pip install</code>
+loconotion and then call
+loconotion to create a website. Another slight cognitive
+overhead is the optional configuration file. It is optional, hence not
+required, but FOMO...</p>
+<p>Overall, the code is classic Python code: not evil, but not great either.
+Let's dive in.</p>
+<p>Here is the source code organization:</p>
+
+<div><pre>loconotion/
+├── conditions.py (52 sloc)
+├── __main__.py (128 sloc)
+├── notionparser.py (467 sloc)</pre></div>
+<p>First thing I notice is that it looks small, sloccount reports 647
+lines of code, so that could definitely be a single module file. Again
+sloccount reports 128 lines in <code>__main__</code>. I recommend against having
+code inside <code>__main__</code> and <code>__init__</code> outside imports or a trivial main
+function, because I rarely see code in those files, which in turn
+makes it difficult to remember to check that it is in fact trivial or
+empty files, and check in particular that it does not contain import
+time logic. Relying on code executing at import time is notoriously
+evil as it breaks various tools e.g. pydoc. Not only it breaks
+essential tooling, but because the code executes at import time,
+depending on how imports happen, the code will execute in some order
+instead of another without having touched the file where the code is,
+making the behavior of an application or worse a library
+unpredictable.</p>
+<p>Executing code at import time is evil</p>
+<p>I do not recommend Flask for that reason. The order of imports change the
+order used to resolve URL into views which can break an application in
+unpredictable ways.</p>
+<p>Luckily, in the case of loconotion <code>__main__.py</code> contains only command
+line interface logic, it is wrapped inside a function and only
+executed when <code>__name__ == "__main__"</code>, so that is OK</p>
+<p>Let's move to <code>loconotion/conditions.py</code>. It is a very tiny file with
+52 lines of code. I do not create files before refactoring. Predicting
+whether a file will be useful help for the reader is difficult to do
+before the code is written. Also it is much easier to navigate a
+single file than a directory and many small files. A file is not a
+zero-cost abstraction in terms of cognitive load for the reader or the
+writer (if there is such a thing such as "zero cognitive cost
+abstraction"). The writer needs to figure a good name for the file,
+and the reader must keep track of where objects definitions are
+located with the supplementary vocabulary that was invented ad-hoc to
+host in the case of <code>loconotion.conditions</code> two classes each of which
+contains one method called... <code>__call__</code>! By the way, whether you use a
+"code navigator" so called jump-to-definition or just a grep-like tool
+does not matter: one file with only 600 lines will ALWAYS beat one
+directory and three files.</p>
+<p>YAGNI complex or clever hierarchy, that is premature optimization.</p>
+<p>Further reading <code>loconotion.conditions</code>, the thing that strikes in
+this particular case, but that dominates the world wide python
+mainstream mind-share: <code>class</code>. You might disagree with me about the
+broader Python ecosystem (this is not the last review!). So, let's
+just focus on this case:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">notion_page_loaded</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An expectation for checking that a notion page has loaded.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">driver</span><span class="p">):</span>
+        <span class="n">notion_presence</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="n">driver</span><span class="o">.</span><span class="n">find_elements_by_class_name</span><span class="p">(</span><span class="s2">&quot;notion-presence-container&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">notion_presence</span><span class="p">):</span>
+            <span class="n">unknown_blocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">find_elements_by_class_name</span><span class="p">(</span><span class="s2">&quot;notion-unknown-block&quot;</span><span class="p">))</span>
+            <span class="n">loading_spinners</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">find_elements_by_class_name</span><span class="p">(</span><span class="s2">&quot;loading-spinner&quot;</span><span class="p">))</span>
+            <span class="n">scrollers</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_elements_by_class_name</span><span class="p">(</span><span class="s2">&quot;notion-scroller&quot;</span><span class="p">)</span>
+            <span class="n">scrollers_with_children</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="k">for</span> <span class="n">scroller</span> <span class="ow">in</span> <span class="n">scrollers</span><span class="p">:</span>
+                <span class="n">children</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">scroller</span><span class="o">.</span><span class="n">find_elements_by_tag_name</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">children</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">scrollers_with_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scroller</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Waiting for page content to load&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (pending blocks: </span><span class="si">{</span><span class="n">unknown_blocks</span><span class="si">}</span><span class="s2">,&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; loading spinners: </span><span class="si">{</span><span class="n">loading_spinners</span><span class="si">}</span><span class="s2">,&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; loaded scrollers: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">scrollers_with_children</span><span class="p">)</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">scrollers</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+            <span class="n">all_scrollers_loaded</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">scrollers</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">scrollers_with_children</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">all_scrollers_loaded</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">unknown_blocks</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">loading_spinners</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+<p>What this function does <em>ahem</em> I mean to write <code>class</code> is: "check
+whether a page is fully loaded" because notion will load lazily a page
+and its content, so loconotion need the page to be fully loaded by the
+headless browser (in the snippet, that is the variable <code>driver</code>),
+before reading the complete html and writing it to a local
+file. Something is strange. I mean, even if you do not know the
+semantic of <code>SomeClass.__call__</code> a class that inherits nothing and has
+a single method is "prolly evil".</p>
+<p>My first take would be to replace this class with one or more function, it
+does not loose generality or expressive power.</p>
+<p>One thing that I do systematically: first return trivial cases, so that I do
+not need to think about it while reading the rest of the code, for instance:</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># something something</span>
+    <span class="c1"># ...</span>
+    <span class="k">return</span> <span class="n">complexity</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">triviality</span>
+</pre></div>
+<p>The above is much more readable as follow:</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">triviality</span>
+<span class="c1"># ...</span>
+<span class="c1"># something something...</span>
+<span class="c1"># ...</span>
+<span class="k">return</span> <span class="n">complexity</span>
+</pre></div>
+<p>Do not be fooled by the <code>not</code> operator, it does not matter whether the
+predicate is "reversed", deal with simple cases first. Also, it saves
+a level of indentation.</p>
+<p>The following:</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">whatever</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">True</span>
+<span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+<p>If you really need a boolean, it is equivalent to:</p>
+<div class="highlight"><pre><span></span><span class="k">return</span> <span class="ow">not</span> <span class="ow">not</span> <span class="n">whatever</span>
+</pre></div>
+<p>All things considered, the following is fine:</p>
+<div class="highlight"><pre><span></span><span class="k">return</span> <span class="n">whatever</span>
+</pre></div>
+<p>In the second class from the same file
+<a href="http://condition.py/">condition.py</a> there is constructor method
+<code>__init__</code> which might trick you into thinking that class is
+useful. Think twice! The class <code>toggle_block_has_opened</code> (verbatim
+snake case), can be rewritten as follow:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">toggle_block_has_opened</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">toggle_block</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># something...</span>
+    <span class="c1"># ...</span>
+</pre></div>
+<p>About <code>loconotion/notionparser.py</code>:</p>
+<ul>
+<li>There is single class that is around 600 lines,</li>
+<li>The name of the class is Parser but it does much more,</li>
+<li>Too much indentation, that can be reduced with the previous trick where first
+the code deal with simple cases,</li>
+<li>Scraping the page which includes loading the complete page should be separated
+into different functions to make it more testable,</li>
+<li>Recursion is not pythonic.</li>
+<li>There is several small nitpicks to do about e.g. multi-line assignments to
+multiple variables, and in general multi-line statements: that hurts
+readability.</li>
+</ul>
+<p>The code is well documented and it is easy to figure what happens. Also, it
+does the job!</p>
+<h2>Rework</h2>
+<p>It is not a drop-in replacement for loconotion, and does not support the same
+features.</p>
+<ul>
+<li>It 280 lines of code</li>
+<li>It use lxml and xpath instead of beautiful soup</li>
+<li>It use httpx instead of requests</li>
+<li>It use pyppeteer instead of selenium</li>
+<li>There is no configuration file</li>
+<li>There is no "nice urls" and some urls are definitly ugly e.g. a page
+inside a table.</li>
+</ul>
+<p>It took me 8 hours</p>
+<p>I do not believe the code is perfect, but that is a code base I can
+work with.  There is one thing to change to make really testable: move
+the code fetching the page outside crawl function. It is not perfect,
+but that is what I used to use to render this website</p>
+<p>The only feature I miss is a feed :)</p>
+<p><a href="https://github.com/amirouche/python-noontide">noontide forge</a>.</p>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me that I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="http://127.0.0.1:8000//feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche</p>
+        </div>
+    </body>
+</html>

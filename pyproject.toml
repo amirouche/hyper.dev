@@ -13,6 +13,8 @@ lxml = "^4.6.2"
 feedgen = "^0.9.0"
 Pygments = "^2.8.1"
 mistune = "^0.8.4"
+html2text = "^2020.1.16"
+debug = "^0.3.2"
 
 [tool.poetry.dev-dependencies]
 

@@ -38,10 +38,6 @@ a:hover {
     text-decoration: underline;
 }
 
-#root {
-    max-width: 777px;
-}
-
 #root p {
-    text-align: justify;q
+    text-align: justify;
 }

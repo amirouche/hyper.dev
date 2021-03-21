@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - raxes: review & rework of searx</title>
+    </head>
+    <body>
+	<div id="root" class="post">
+	    <div><h1>2021/01/12 - raxes: review &amp; rework of searx</h1>
+<p><a href="https://github.com/searx/searx">searx</a> is privacy-respecting
+metasearch engine. It is search engine that does not have its own
+index, but rely on other search engines to deliver its results. It
+rely on Flask, requests and lxml.</p>
+<h2>Review</h2>
+<p>According to the Makefile, the entry point of the web application, is
+./searx/webapp.py. The main problem with searx is that it is not easy
+to use it as library.</p>
+<p>Looking up @app.route yield only 13 routes/</p>
+<p>Let's look through each from least interesting to the most clever,
+that is approximately a bottom-up read.</p>
+<h3><code>/translations.js</code></h3>
+<p>There is two small issues with this code:</p>
+<ol>
+<li><p>It is easier to debug code when return is followed by a simple variable e.g.
+return foobar. Here things are made worse, because the returned value span
+multiple lines.</p>
+</li>
+<li><p>the return is multiple line statement. That requires to zigzag the code.
+Instead of reading top-down left-right you need to zigzag and reconfigure your
+brain to also do read down-top (and even right-left in more problematic
+cases).</p>
+</li>
+</ol>
+<h3><code>/config</code></h3>
+<p>The use of underscores _ in variable names is odd. In this case, it is
+a way to avoid to think and overload the reader with useless and
+poorly named variables names. I do that a lot with Scheme, but with
+Scheme you can use more readable and better looking characters for
+naming variables. underscore is difficult to read, and sometime it
+disappears because of poor resolution or image scaling. The following
+code:</p>
+<div class="highlight"><pre><span></span><span class="n">_engines</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">engine</span> <span class="ow">in</span> <span class="n">engines</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">something</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">engine</span><span class="p">)</span>
+    <span class="n">_engines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">something</span><span class="p">)</span>
+</pre></div>
+<p>Can be reworked into a list comprehension:</p>
+<div class="highlight"><pre><span></span><span class="n">engines</span> <span class="o">=</span> <span class="p">[</span><span class="n">process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">engine</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">engine</span><span class="p">)</span> <span class="ow">in</span> <span class="n">engines</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+</pre></div>
+<p>That much more obvious that one can use a list comprehension instead
+of the following code:</p>
+<div class="highlight"><pre><span></span><span class="n">_plugins</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">:</span>
+    <span class="n">_plugins</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">default_on</span><span class="p">})</span>
+</pre></div>
+<p>Mind the use of <code>_</code> as variable name. When used as variable name
+placeholder, <code>_</code> should not be accessed. It would be trivial to
+replace <code>_</code> with item and bundle it inside a list comprehension.</p>
+<h3><code>/favicon.ico</code></h3>
+<p>That is a complex one-liner:</p>
+<div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/favicon.ico&#39;</span><span class="p">)</span> <span class="k">def</span> <span class="nf">favicon</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">send_from_directory</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">root_path</span><span class="p">,</span> <span class="n">static_path</span><span class="p">,</span> <span class="s1">&#39;themes&#39;</span><span class="p">,</span> <span class="n">get_current_theme_name</span><span class="p">(),</span> <span class="s1">&#39;img&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;favicon.png&#39;</span><span class="p">,</span>
+        <span class="n">mimetype</span><span class="o">=</span><span class="s1">&#39;image/vnd.microsoft.icon&#39;</span>
+    <span class="p">)</span>
+</pre></div>
+<p>I will not repeat that multi-line return statements are difficult to read.</p>
+<p>In that case, the code is trivial enough, but nesting calls is a evil habit.</p>
+<p>Things like:</p>
+<div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">qwe</span><span class="p">(</span><span class="n">asd</span><span class="p">(</span><span class="n">zxc</span><span class="p">(</span><span class="n">iop</span><span class="p">)),</span> <span class="n">jkl</span><span class="p">(</span><span class="n">bnm</span><span class="p">))</span>
+</pre></div>
+<p>Are not only difficult to read (even with normal variable names) but
+also more complex to debug, because the intermediate result does
+not get their own variable.</p>
+<h3><code>/opensearch.xml</code></h3>
+<p>That is nice code. I like the following pattern that is used twice in
+that function:</p>
+<div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">default_value</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">nominal</span><span class="p">:</span> <span class="n">out</span> <span class="o">=</span> <span class="n">something</span>
+</pre></div>
+<p>It is odd to see the HTTP method spelled lower case but that might be
+something specific to opensearch. Otherwise I try to avoid shortcut
+variables names in that function ret and response could both be
+renamed out since it is the output of the function.</p>
+<h3><code>/robots.txt</code></h3>
+<p>Not very interesting, except maybe it would be easier to create a
+global constant (and in some case, but prolly not here, use an
+external text file).</p>
+<h3><code>/stats/errors</code></h3>
+<p>Again, factoring the body of the for and using a list comprehension
+could be nice.</p>
+<p>The following code:</p>
+<div class="highlight"><pre><span></span><span class="n">foobar</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">something</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="n">foobar</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</pre></div>
+<p>That is equivalent to:</p>
+<div class="highlight"><pre><span></span><span class="n">foobar</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">something</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+<p>When you use the key keyword argument in list.sort, sorted or others,
+you might want to rely on the standard library
+<a href="https://docs.python.org/3/library/operator.html#mapping-operators-
+to-functions">operators</a>.</p>
+<h3><code>/stats</code></h3>
+<p>Nothing interesting to say about this function.</p>
+<h3><code>/image_proxy</code></h3>
+<p>The following code:</p>
+<div class="highlight"><pre><span></span><span class="n">headers</span> <span class="o">=</span> <span class="n">dict_subset</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;If-Modified-Since&#39;</span><span class="p">,</span> <span class="s1">&#39;If-None-Match&#39;</span><span class="p">})</span>
+</pre></div>
+<p>Can be rewritten to be more readable with a <strong>single-line</strong> dictionary
+comprehension:</p>
+<div class="highlight"><pre><span></span><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">headers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">headers</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">]}</span>
+</pre></div>
+<p>I still do not understand why everybody use the variable name logger.</p>
+<p>The following:</p>
+<div class="highlight"><pre><span></span><span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">foobar</span><span class="p">:</span> <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span> <span class="n">do_something</span><span class="p">(</span><span class="n">counter</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+</pre></div>
+<p>Can be rewritten:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">counter</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">enumrate</span><span class="p">(</span><span class="n">foobar</span><span class="p">):</span> <span class="n">do_something</span><span class="p">(</span><span class="n">counter</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+</pre></div>
+<p>enumerate is builtin function, hence always available.</p>
+<h3><code>/preferences</code></h3>
+<p>I will not repeat what I already wrote about comprehensions. There is good
+pattern in there. But the last line of the function kills everything.</p>
+<h3><code>/autocompleter</code></h3>
+<p>An idea here about how to avoid to use a class and sadly hide the
+interesting logic away from the where the action happens:</p>
+<p>RawTextQuery return an object with a public interface that has 4 methods
+include some that have side-effects like the following call to changeQuery:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">raw_results</span><span class="p">:</span>
+    <span class="n">raw_text_query</span><span class="o">.</span><span class="n">changeQuery</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="c1"># add parsed result</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">raw_text_query</span><span class="o">.</span><span class="n">getFullQuery</span><span class="p">())</span>
+</pre></div>
+<p>That is necessarily a side-effect because it does not assign a
+variable otherwise it would be dead-code. Here raw_text_query is
+mutated, mutable objects are difficult to debug.</p>
+<p>Following the spirit of the code, the function searx_bang could be a
+method of RawTextQuery especially since it is used only once in the
+whole code base.</p>
+<p>Anyway the full function could rewritten as follow:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">autocompleter</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return autocompleter results&quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">query</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">languages</span><span class="p">,</span> <span class="n">specific</span> <span class="o">=</span> <span class="n">query_parse</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">BadQuery</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">400</span>
+
+    <span class="c1"># parse searx specific autocompleter results like !bang</span>
+    <span class="n">hits</span> <span class="o">=</span> <span class="n">searx_bang</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">languages</span><span class="p">,</span> <span class="n">specific</span><span class="p">)</span>
+
+    <span class="n">backend_name</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">preferences</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="s1">&#39;autocomplete&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">completer</span> <span class="o">=</span> <span class="n">autocomplete_backends</span><span class="p">[</span><span class="n">backend_name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">hits</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">languages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">specific</span><span class="p">)):</span>
+            <span class="c1"># get language from cookie</span>
+            <span class="n">language</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">preferences</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="s1">&#39;language&#39;</span><span class="p">)</span>
+            <span class="n">language</span> <span class="o">=</span> <span class="n">language</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="p">(</span><span class="n">language</span> <span class="ow">or</span> <span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;en&#39;</span>
+            <span class="c1"># run autocompletion</span>
+            <span class="n">more</span> <span class="o">=</span> <span class="n">completer</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">language</span><span class="p">)</span>
+            <span class="n">hits</span> <span class="o">+=</span> <span class="n">more</span>
+
+    <span class="c1"># parse results (write :language and !engine back to result string)</span>
+    <span class="n">hits</span> <span class="o">=</span> <span class="p">[</span><span class="n">do_something</span><span class="p">(</span><span class="n">hit</span><span class="p">)</span> <span class="k">for</span> <span class="n">hit</span> <span class="ow">in</span> <span class="n">hits</span><span class="p">]</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">hits_to_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">hits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reponse</span>
+</pre></div>
+<p>Mind the fact:</p>
+<ol>
+<li><p>I dropped the disabled_engine variable, because I am not sure where
+it is useful.</p>
+</li>
+<li><p>It is not clear what happens in the last for loop especially with
+the mutated raw query, so I replaced the whole thing with a
+comprehension and factored the body in a function called do_something.</p>
+</li>
+</ol>
+<p>But that is not everything we can do. To make the project usable as a
+library, it will be nice to extract the logic and keep environment
+specifics in the flask view.</p>
+<p>If you do it yourself, you might end up with something like that as
+the view function autocompleter:</p>
+<div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/autocompleter&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">autocompleter</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return autocompleter results&quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">query</span><span class="o">.</span><span class="n">isspace</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s1">&#39;thanks, but no thanks!&#39;</span><span class="p">,</span> <span class="mi">400</span>
+
+    <span class="n">backend_name</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">preferences</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="s1">&#39;autocomplete&#39;</span><span class="p">)</span>
+    <span class="n">language</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">preferences</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="s1">&#39;language&#39;</span><span class="p">)</span>
+    <span class="n">language</span> <span class="o">=</span> <span class="n">language</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="p">(</span><span class="n">language</span> <span class="ow">or</span> <span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;en&#39;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">hits</span> <span class="o">=</span> <span class="n">autocomplete</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">backend_name</span><span class="p">,</span> <span class="n">language</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">BadQuery</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;invalid query because...&#39;</span><span class="p">,</span> <span class="mi">400</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">hits_to_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">hits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reponse</span>
+</pre></div>
+<h3><code>/about</code></h3>
+<p>It is a static page so not much to say, except the indentation is not
+good.</p>
+<h3><code>/search</code></h3>
+<p>That is the gist of the project. Here is the big problem: validation,
+logic and rendering is mixed into a giant view function, factorization
+was done, but there is room for more especially regarding the output
+generation.</p>
+<p>Here is the code that execute the meta search:</p>
+<div class="highlight"><pre><span></span><span class="c1"># search</span>
+<span class="n">search_query</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">raw_text_query</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">result_container</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">search_query</span><span class="p">,</span> <span class="n">raw_text_query</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_search_query_from_webapp</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">preferences</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">)</span>
+    <span class="c1"># search = Search(search_query) #  without plugins</span>
+    <span class="n">search</span> <span class="o">=</span> <span class="n">SearchWithPlugins</span><span class="p">(</span><span class="n">search_query</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">user_plugins</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+    <span class="n">result_container</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">search</span><span class="p">()</span>
+<span class="k">except</span> <span class="n">SearxParameterException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;search error: SearxParameterException&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">index_error</span><span class="p">(</span><span class="n">output_format</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">),</span> <span class="mi">400</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;search error&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">index_error</span><span class="p">(</span><span class="n">output_format</span><span class="p">,</span> <span class="n">gettext</span><span class="p">(</span><span class="s1">&#39;search error&#39;</span><span class="p">)),</span> <span class="mi">500</span>
+</pre></div>
+<p>There is no point into defining as None the first three variables
+since it is useless without an actual result, the code that follow
+expect something that is not None.</p>
+<p>Something that is always odd: multiples statements inside the try
+block.</p>
+<p>SearchWithPlugins is used only once in the whole code base and the
+only public method is search. That begs to become a function, it will
+make clear how do a search!</p>
+<h3>How meta search works wit searx?</h3>
+<p>After jumping around definitions I end in the class Search at the method
+search_multiple_requests:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search_multiple_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests</span><span class="p">):</span>
+        <span class="n">search_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">engine_name</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_params</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">:</span>
+            <span class="n">th</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">processors</span><span class="p">[</span><span class="n">engine_name</span><span class="p">]</span><span class="o">.</span><span class="n">search</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">result_container</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">actual_timeout</span><span class="p">),</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">search_id</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">th</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">th</span><span class="o">.</span><span class="n">_engine_name</span> <span class="o">=</span> <span class="n">engine_name</span>
+            <span class="n">th</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">threading</span><span class="o">.</span><span class="n">enumerate</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">th</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">search_id</span><span class="p">:</span>
+                <span class="n">remaining_time</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">actual_timeout</span> <span class="o">-</span> <span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+                <span class="n">th</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">remaining_time</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">th</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+                    <span class="n">th</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">result_container</span><span class="o">.</span><span class="n">add_unresponsive_engine</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">_engine_name</span><span class="p">,</span> <span class="s1">&#39;timeout&#39;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;engine timeout: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">_engine_name</span><span class="p">))</span>
+</pre></div>
+<p>It does trigger simultaneously, using threads, a search query against
+a search engine based on user preference and the last <code>for</code> block will
+retrieve the result under a timeout. That is if a search engine does
+not reply under less that some configured time, it is considered an
+error.</p>
+<p>The part that interest me is:</p>
+
+<div><pre>target=processors[engine_name].search,</pre></div>
+<p>After some jumping around, I find the mighty directory <code>searx/engines</code>
+that contains all the logic to query and scrape results.</p>
+<h3>Rework</h3>
+<p>This is a very quick rework of searx, it is very far from as feature
+parity.</p>
+<p><a href="https://git.sr.ht/~amirouche/raxes">forge</a>.</p>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me that I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="http://127.0.0.1:8000//feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche</p>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - Babelia search engine design planning (take three)</title>
+    </head>
+    <body>
+	<div id="root" class="post">
+	    <div><h1>2021/01/10 - Babelia search engine design planning (take three)</h1>
+<p><img src="https://images.unsplash.com/photo-1528076178276-9dff69729561?ixlib=rb-1.2.1&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb&amp;w=1024" alt=""></p>
+<p>I recycled two previous notes into one and added some.</p>
+<p>I read Steve Jobs said something along the lines of "Before big projects come
+big thoughts". I have been brainstorming the next steps of babelia for the
+last few weeks. Some of you might think that this is merely procrastinating.
+Announcing a project before it is done is against the netiquette, and dubbed
+useless. This is not only about bragging about my project and propping up my
+ego. One couple of months worth of thinking is a lot of work. There was almost
+no production of working code. Product design is a job on its own and hence
+deserves some recognition. That recognition will take the form of a blog post,
+a few hits on my web server, and I dare hope some feedback!</p>
+<h2>Prelude</h2>
+<p>I read more often than ever that people are looking for ways to build
+their own search engines.</p>
+<p>Even if more on more "advanced" features are integrated into search
+engines.  They are mostly based on human grunt work. Semantic search
+engine, whatever "semantic" does mean for you, is in fact merely a
+couple, not more than a dozen, set of tricks. I like to say, much of
+Google's search engine is good old human labor. If you still doubt it,
+here is again: Google results are not only biased, also they are
+editorialized. Whether algorithms, and their bugs, party is
+irrelevant.</p>
+<p>My point is: it is human made. Not some necessarily advanced alien tool.</p>
+<p>The only thing preventing you to have your own search engine is there
+is no readily available software. In fact, there is
+<a href="https://github.com/commonsearch">commonsearch</a>. The reason there is
+no public FLOSS search engine is because there is no cheap hardware.</p>
+<p>This might sound like a crazy idea five or ten years ago, but with the
+advent of AMD Epyc and AMD threadripper ie. <a href="http://cultureandempire.com/html/cande.html">cost gravity at
+play</a> getting together a
+personal search engine is, if not a necessity, at least a possibility.</p>
+<p>The most common complain I read about Google is that it yields
+irrelevant text "that do no even contain my search terms". That is not
+a bug, that is a feature! It seems to me the subtext is that you can
+not easily customize Google or whatever search algorithm since it is
+privateer. Even retrieving Google search results for further
+processing if not forbidden, is difficult.</p>
+<h2>Big Picture</h2>
+<p>The primary user interface of a search engine is… dum dum dum… the
+search input box. What is interesting is what goes inside it: the
+so-called boolean- keyword query. For example:</p>
+
+<div><pre>search engine (postgresql OR psql OR pgsql OR postgres) -tsearch2</pre></div>
+<p>The intention behind that query is to retrieve the attempts to build a
+search engine with PostgreSQL without tsearch2 extension. As you see,
+the PostgreSQL concept can have multiple realization "psql" or
+"pgsql"... This could be handled by the search engine itself with
+synonym expansion.</p>
+<p>While the discovery of synonyms is not planned, there will be a way
+for the user to customize babelia dictionary of lemma, one way
+synonyms and two way synonyms with a dedicated knowledge-base. It will
+be global to the instance.  It will be built on top of what is known
+as <a href="https://github.com/amirouche/copernic/">copernic</a>. If you are too
+lazy to click (and star), to put it simply: copernic is a cooperative
+knowledge base.</p>
+<p>So instead, of typing the above query the user will only have to type
+the following:</p>
+
+<div><pre>search engine postgresql -tsearch2</pre></div>
+<p>On the subject of query expansion, I want to stress the importance of:</p>
+<ul>
+<li>Stem</li>
+<li>Lemma</li>
+<li>One-way synonyms</li>
+<li>Two-way synonyms</li>
+</ul>
+<p>Possibly other lexical features that can be taken into account. For
+instance, the following query:</p>
+
+<div><pre>big search engine</pre></div>
+<p>Can be translated into the following query:</p>
+
+<div><pre>(big OR giant OR global) search engine</pre></div>
+<p>That can entirely be handled by the same machinery.</p>
+<p>Another important feature of babelia is that it will both support stem
+and lemma. Usually stems allow you to find documents that contain
+words that look like the one typed in the query. Imagine the following
+query:</p>
+
+<div><pre>search engine product</pre></div>
+<p>You might want to also match the following:</p>
+
+<div><pre>search engine production</pre></div>
+<p>Nowadays this happens automatically. That behavior can be turned off
+using double quotes, like:</p>
+
+<div><pre>search engine "product"</pre></div>
+<p>The above query matches documents that contain the exact word "product".</p>
+<p>But the above approach does not always work. For instance, given the following
+query:</p>
+
+<div><pre>avoir le mojo</pre></div>
+<p>You might want to also match the following:</p>
+
+<div><pre>J'ai le mojo</pre></div>
+<p>Or</p>
+
+<div><pre>Il a le mojo</pre></div>
+<p>Or even:</p>
+
+<div><pre>Nous avons le mojo</pre></div>
+<p>You get it. Stems are a first step toward achieving high precision and
+recall because they reduce false negatives, but it does not completely
+eliminate the problem. To help with that, babelia will rely on
+lemma. Unlike stems, lemma can not be computed automagically, you need
+a database, that is another place where the knowledge-base will be
+useful.</p>
+<p>I read often that you have to use only one of : a) stem or b)
+lemma. That is not true. In fact, you can use both.</p>
+<p>To help the user a little with typos, babelia will feature a spell
+checker that takes its input from the index, so that it can improve
+itself without the need to manually update the dictionary. In the next
+sprint, I will only support ascii and languages that can be easily
+transliterated to ascii like french, Spanish, Italian, unlike Chinese,
+Korean and Japanese which are out-of-scope of the next alpha.</p>
+<p>Another aspect that I prototyped in faux-texte, is query
+suggestion. Since, I do not have a vast amount of user queries, I can
+not compute nearest neighbors using word2vec or BERT with the help of
+something like
+<a href="https://github.com/facebookresearch/faiss/wiki/Getting-started">faiss</a>. I
+could do that against the index. Instead of considering user queries,
+which is not very privacy preserving, it will rely on the documents
+that were indexed.  At index time, babelia will build a Markov-chain
+that will allow babelia to complete and mix-and-match queries.</p>
+<p>Queries will be limited to one second at most. The limit will be based
+on word frequency and computed on available hardware. To workaround
+that limitation the user will be suggested related queries constructed
+with the help of Markov-chains described above.</p>
+<p>One last aspect regarding queries. This is a significant feature,
+because the tagline of the project stems from that feature: the
+federation. Because of privacy, the queries will not be distributed
+all the time to other babelia instances. Instead, every babelia
+instance will advertise a summary of the content of their index. In
+case the user requests it or if there is no results in the current
+instance, babelia will analyze the terms and match them with other
+babelia instances and the user will be able to decide whether to
+remotely submit that query.</p>
+<p>Problem:</p>
+<p>If 10 users share a single server with 20 cores, hence 40 available
+threads that cost 100 euros per month (10 euros per person). Each user
+does 100 queries per day that last 1 second, the overall server
+utilization will still be at 2%. That CPU power needs to shared
+otherwise it is wasted.</p>
+<p>Call to participation</p>
+<p>If you are interested in a FLOSS search engine that is privacy
+respecting and most likely more relevant, chime into the conversation
+at <a href="http://peacesear.ch/"><a href="http://peacesear.ch">http://peacesear.ch</a></a>.</p>
+<p>You can subscribe to the mailing list, send an email to the following
+address to subscribe:</p>
+
+<div><pre>~peacesearch/peacesearch-discuss+subscribe@lists.sr.ht</pre></div>
+<h2>Conclusion</h2>
+<p>There is a gigantic leap that is going to happen in search because of
+hardware availability, and free software with readable source ie. the
+only thing that makes human progress possible: knowledge sharing.</p>
+<blockquote><p>"Plans are only good intentions unless they immediately degenerate
+into hard work." Peter Drucker</p>
+</blockquote>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me that I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="http://127.0.0.1:8000//feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche</p>
+        </div>
+    </body>
+</html>
