@@ -22,7 +22,8 @@ html {
 body {
     font-size: 18px;
     color: black;
-    padding: 50px;
+    margin: 0px;
+    padding: 15px;
     font-family: monospace, mono;
 }
 
