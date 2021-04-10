@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - (import (okdb))</title>
+    </head>
+    <body>
+	<div id="root" class="post">
+	    <div><h1>2021/04/10 - (import (okdb))</h1>
+<p><img src="alvaro-pinot-czDvRp5V2b0-unsplash.jpg" alt="The abstraction of architecture of the Abu Dhabi Louvre Museum ceiling it’s a piece of art on it’s own."></p>
+<h2>Status</h2>
+<p><strong>Rework draft.</strong></p>
+<h2>Issues</h2>
+<ul>
+<li><p>Transaction begin, rollback, before and after commit hooks are
+missing.</p>
+</li>
+<li><p>Maybe add specification about thread safety.</p>
+</li>
+</ul>
+<h2>Abstract</h2>
+<p>General purpose backend storage datastructure for building in-memory
+or on-disk databases that can handle concurrency thanks to ACID
+transactions.</p>
+<h2>Rationale</h2>
+<p><code>okdb</code> can be the primitive datastructure for building many
+datastructures. Low level extensions include counter, bag, set,
+mapping-multi, binary object store. Higher level extensions include
+<a href="https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model">Entity-Attribute-Value</a>
+possibly supported by datalog, Generic Tuple Store (nstore) inspired
+from <a href="https://en.wikipedia.org/wiki/Resource_Description_Framework">Resource Description
+Framework</a>
+that can trivialy match the query capabilities of
+<a href="https://www.w3.org/TR/rdf-sparql-query/">SPARQL</a>, nstore can
+painlessly implement
+<a href="https://w3c.github.io/rdf-star/cg-spec/2021-02-18.html">RDF-star</a>, or
+even the Versioned Generic Tuple Store (vnstore). Also, it is possible
+to implement a property graph database, ranked set, leaderboard,
+priority queue. It is possible to implement efficiently geometric
+queries such as xz-ordered curves.</p>
+<p><code>okdb</code> is useful in the context of on-disk persistence. <code>okdb</code> is also
+useful in a context such as client-server applications, where the
+client need to cache heterogeneous data. It may be used in the
+browser, or in microservice configuration as a shared in-memory
+datastructure.</p>
+<p>There is several existing databases that expose an interface similar
+to <code>okdb</code>, and even more that use an ordered key-value store
+(okvs) as their backing storage.</p>
+<p>While <code>okdb</code> interface is lower-level than the mainstream SQL, it is
+arguably more useful because the implementation specifics stems from
+well-known datastructure part of every software engineering
+curriculum, namely binary trees, also because it allows to implement
+SQL, last but not least it reflects the current practice that builds
+(distributed) databases systems based on a similar interface.</p>
+<p><code>okdb</code> extends, and departs from the common okvs interface
+inherited from BerkeleyDB, to ease the implementation thanks to
+bounded keys and values, while making the implementation of efficient
+extensions also easier thanks to the ability to estimate the count of
+keys, and the size of key-value pairs, in a given range.</p>
+<p>This SRFI should offer grounds for apprentices to learn about data
+storage. It will also offer a better story (the best?) for data
+durability in Scheme implementations.</p>
+<h2>Reference</h2>
+<h3><code>(make-okdb filepath [block-read block-write]) string? procedure? procedure? → okdb?</code></h3>
+<p>Rationale: In SRFI-167, <code>make-okvs</code> could take various options. The
+interface was difficult, and did not work well. Instead, of trying to
+define a couple of options, a left aside others, it is up to the
+implementer and possibly eventually to the user to deal with options
+in an appropriate way. One way, for the implementer to enable options
+is to create a super procedure that a) returns multiple values,
+including the constructor, b) rely on generic methods, or something
+else.</p>
+<p>Return a handle on the database. <code>FILEPATH</code> may be a string describing
+the on-disk file or directory where the database will be saved. In
+case <code>okdb</code> work only from memory, it should be ignored.</p>
+<p><code>BLOCK-READ</code> and <code>BLOCK-WRITE</code> if provided will be used to consume or
+produce bytes that will read or written to disk, possibly using
+cryptography or compression on input bytes. Both <code>BLOCK-READ</code> and
+<code>BLOCK-WRITE</code> will take a generator and accumulator as argument.  In
+case the implementation works fully from memory, <code>BLOCK-READ</code> and
+<code>BLOCK-WRITE</code> should be ignored.</p>
+<h3><code>(okdb? obj) * → boolean?</code></h3>
+<p>Returns <code>#t</code> if <code>OBJ</code> is an <code>&lt;okdb&gt;</code> instance. Otherwise, returns
+<code>#f</code>.</p>
+<h3><code>(okdb-close! db) okdb?</code></h3>
+<p>Close <code>DB</code>. All transactions that completed successfully should be
+available the next time the database is open with <code>make-okdb</code> except
+in the case of fully in-memory database.</p>
+<h3><code>(okdb-transaction? obj) * → boolean?</code></h3>
+<p>Returns <code>#t</code> if <code>OBJ</code> is an <code>&lt;okdb-transaction&gt;</code> instance. Otherwise,
+returns <code>#f</code>.</p>
+<h3><code>(okdb-cursor? obj) * → boolean?</code></h3>
+<p>Returns <code>#t</code> if <code>OBJ</code> is an <code>&lt;okdb-cursor&gt;</code> instance. Otherwise,
+returns <code>#f</code>.</p>
+<h3><code>(okdb-handle? obj) * → boolean?</code></h3>
+<p>Returns <code>#t</code> if <code>OBJ</code> is satisfy either <code>okdb?</code>, <code>okdb-transaction?</code>,
+or <code>okdb-cursor?</code>. Otherwise, returns <code>#f</code>.</p>
+<h3><code>(okdb-key-max-size handle)</code></h3>
+<p>Rationale: Most Ordered Key-Value Store do not specify the maximum
+size of key, making both the implementation and its use erratic. The
+same maximum size might not work in all situations, hence it might be
+subject to customization. The important is to guarantee some
+predicatable performance when keys follow that constraint. It also
+makes the implementation of <code>okdb</code> easier, among other thing because
+the implementation does not need to have to handle large binaries.
+That is not a negligeable constraint for the user as keys max size are
+not necessarly predicatable, but in any case should be small since in
+most implementations those are kept in memory.</p>
+<p>Return the maximum size of a key of the database associated with
+<code>HANDLE</code>.</p>
+<h3><code>(okdb-value-max-size handle)</code></h3>
+<p>Rationale: Same as the above: it is easier to implement. For the user
+perspective, it is much easier to handle the situation of large values
+since they can be split without loosing features.</p>
+<p>Return the maximum size of a value of the database associated with
+<code>HANDLE</code>.</p>
+<h3><code>(okdb-conflict? obj)</code></h3>
+<p>Returns <code>#t</code> if <code>OBJ</code> is a conflict error. Otherwise returns
+<code>#f</code>. Such object may be raised by <code>okdb-in-transaction</code>.</p>
+<h3><code>(okdb-in-transaction okdb proc [failure [success]]) okdb? procedure? procedure? procedure? → (values (every? *))</code></h3>
+<p>Rationales:</p>
+<ul>
+<li><p><code>okdb-in-transaction</code> does not include a retry logic when
+<code>okdb-conflict?</code> is raised because retrying might require to wait
+which depends on the implementation but also and more importantly on
+user code. The user is in the best position to know how, and when to
+retry the transaction. The last resort strategy is not even to retry
+the transaction immediatly, but to put the operation in queue possibly
+persisted in the database, and force the serialization through a
+single thread. In any case, retry should be explicit in user code.</p>
+</li>
+<li><p>Serializable scheme trades guarantees regarding the consistency of
+the data, and hence ease of development because the state of the
+database is determinist versus performance. The prescription of
+serializable transactions is a strong requirement, that was thusfar
+almost completly left aside in the industry in favor of snapshot
+isolation. The philosophy here is: <em>make it work, then make it
+fast</em>. It is not possible to build reliable systems upon claims that
+are weak, or false, in the general case.</p>
+</li>
+<li><p>Nested transactions were ruled out because it is still not clear
+whether they put a strain on the implementation that does not yield
+much help in user code. Nested transactions are similar to
+savepoints or autonomous transactions.</p>
+</li>
+</ul>
+<p><code>okvs-in-transaction</code> describes the extent of the atomic property, the
+A in <a href="https://en.wikipedia.org/wiki/ACID">ACID</a>, of changes against
+the underlying database. A transaction will apply all database
+operations in <code>PROC</code> or none: all or nothing. When
+<code>okdb-in-transaction</code> returns successfully, the changes will be
+visible for future transactions, and implement durability, D in ACID,
+and when the database implements on-disk storage, across restarts. In
+case of error, changes will not be visible to other transactions in
+all cases. Regarding isolation, and consistency, respectively the I
+and C in ACID,
+<a href="https://en.wikipedia.org/wiki/Serializability">serializable</a>
+transactions is prescribed: the concurrent execution of
+<code>(okvs-in-transaction okdb proc ...)</code> should render the database as if
+the concurrent transactions were executed serially ie. without
+overlapping time, in some order, possibly rejecting some of them with
+an error that satisfy <code>okdb-conflict?</code>. In particular, it is stronger
+than snapshot isolation.</p>
+<p>Begin a transaction against the database, and execute <code>PROC</code>. <code>PROC</code>
+is called with first and only argument an object that satisfy
+<code>okdb-transaction?</code>. In case of error, rollback the transaction and
+execute <code>FAILURE</code> with the error object as argument. The default value
+of <code>FAILURE</code> re-raise the error with <code>raise</code>. Otherwise, executes
+<code>SUCCESS</code> with the returned values of <code>PROC</code>.  The default value of
+<code>SUCCESS</code> is the procedure <code>values</code>.</p>
+<p><code>okdb</code> does not support nested transactions.</p>
+<p>TODO: what about hooks</p>
+<p>In case <code>okvs-in-transactions</code> raise an error that satisfy
+<code>okdb-conflict?</code>, the user may re-run the same transaction taking care
+that <code>PROC</code> is idempotent.</p>
+<h3><code>(okdb-call-with-cursor handle proc) okdb-handle? procedure? → (values (every? *))</code></h3>
+<p>Open a cursor against <code>HANDLE</code> and call <code>PROC</code> with it. When <code>PROC</code>
+returns, the cursor is closed.</p>
+<p>If <code>HANDLE</code> satisfy <code>okdb?</code>, <code>okdb-call-with-cursor</code> must start a
+transaction.</p>
+<p>If <code>HANDLE</code> satisfy <code>okdb-cursor?</code>, <code>okdb-call-with-cursor</code> must pass
+a cursor positioned at the same position as <code>HANDLE</code> and the same keys
+snapshot.</p>
+<p>The produced cursor is not positioned, except when <code>HANDLE</code> satisfy
+<code>okdb-cursor?</code>, it is an error to call <code>okdb-cursor-next?</code>,
+<code>okdb-cursor-previous?</code>, <code>okdb-cursor-key</code>, or
+<code>okdb-cursor-value</code>. When <code>HANDLE</code> does not satisfy <code>okdb-cursor?</code>,
+the user should call <code>okdb-cursor-seek?</code> immediatly after
+<code>okdb-call-with-cursor</code>.</p>
+<p>The cursor that is created will see a snapshot of keys of the database
+inside the transaction taken when <code>okdb-call-with-cursor</code> is
+called. During the extent of <code>PROC</code>, <code>okdb-set!</code> and <code>okdb-remove!</code>
+will not change the position of the cursor, and the cursor will see
+removed keys and not see added keys. Keys which value was changed
+during cursor navigation, that exist when <code>okdb-call-with-cursor</code> is
+called, can be seen. That is, the cursor is stable.</p>
+<h3><code>(okdb-estimate-key-count handle [key other [offset [limit]]]) handle? bytevector? bytevector? integer? integer? → integer?</code></h3>
+<p>Rationale: It is helpful to know how big is a range to be able to tell
+which index to use as seed. Imagine a query against two attributes,
+each attribute with their own index and no compound index: being able
+to tell which subspace contains less keys, can speed up significantly
+query time.</p>
+<p>Return an estimate count of keys between <code>KEY</code> and <code>OTHER</code>. If <code>KEY</code>
+and <code>OTHER</code> are omitted return the approximate count of keys in the
+whole database.</p>
+<p>If <code>OFFSET</code> is provided, <code>okdb-estimate-key-count</code> will skip the first
+<code>OFFSET</code> keys from the count.</p>
+<p>If <code>LIMIT</code> is provided, <code>okdb-estimate-key-count</code> will consider <code>LIMIT</code>
+keys from the count.</p>
+<h3><code>(okdb-estimate-bytes-count handle [key [other [offset [limit]]]]) okdb-handle? bytevector? bytevector? integer? integer? → integer?</code></h3>
+<p>Rationale: That is useful in cases where the size of transaction is
+limited.</p>
+<p>Return the estimated size in bytes of key-value pairs in the subspace
+described by <code>KEY</code> and <code>OTHER</code>. If <code>OTHER</code> is omitted, return the
+approximate size of the key-value pair associated with
+<code>KEY</code>. Otherwise, return the estimated size of the whole database
+associated with <code>HANDLE</code>.</p>
+<p>If <code>OFFSET</code> is provided, <code>okdb-estimate-bytes-count</code> will skip the
+first <code>OFFSET</code> keys from the count.</p>
+<p>If <code>LIMIT</code> is provided, <code>okdb-estimate-bytes-count</code> will consider <code>LIMIT</code>
+keys from the count.</p>
+<h3><code>(okdb-set! handle key value) okdb-handle? bytevector? bytevector?</code></h3>
+<p>Associate to the bytevector <code>KEY</code>, with the bytevector <code>VALUE</code>. If
+<code>HANDLE</code> satisfy <code>OKDB?</code> start a transaction to execute the operation.</p>
+<p>If <code>HANDLE</code> satisfy <code>okdb-cursor?</code>, <code>okdb-set!</code> does not change the
+position of <code>HANDLE</code>.</p>
+<h3><code>(okdb-remove! handle key) okdb-handle? bytevector?</code></h3>
+<p>Removes the bytevector <code>KEY</code>, and its associated value. If <code>HANDLE</code>
+satisfy <code>OKDB?</code> start a transaction to execute the operation.</p>
+<p>If <code>HANDLE</code> satisfy <code>okdb-cursor?</code>, <code>okdb-set!</code> does not change the
+position of <code>HANDLE</code>.</p>
+<h3><code>(okdb-cursor-seek cursor strategy key) okdb-cursor? symbol? bytevector? → symbol?</code></h3>
+<p>Position the <code>CURSOR</code> using <code>STRATEGY</code>. <code>STRATEGY</code> can be one of the
+following symbol:</p>
+<ul>
+<li><code>less-than-or-equal</code></li>
+<li><code>equal</code></li>
+<li><code>greater-than-or-equal</code></li>
+</ul>
+<p>The strategy <code>less-than-or-equal</code> will first seek for the biggest key
+that is less than <code>KEY</code>, if there is one, it returns the symbol <code>less</code>.
+Otherwise, if there is a key that is equal to <code>KEY</code> it will return the
+symbol <code>equal</code>. If there is no valid position for the given <code>KEY</code>, it
+fallbacks to the symbol <code>not-found</code>.</p>
+<p>The strategy <code>equal</code> will seek a key that is equal to <code>KEY</code>. If there
+is one it will return the symbol <code>equal</code>. Otherwise, it returns the
+symbol <code>not-found</code>.</p>
+<p>The strategy <code>greater-than-equal</code> will first seek the smallest key that
+is greater than <code>KEY</code>, if there is one, it returns the symbol
+<code>greater</code>.  Otherwise, if there is a key that is equal to <code>KEY</code> it
+will return the symbol <code>equal</code>. If there is no valid position for the
+given <code>KEY</code>, it fallbacks the symbol <code>not-found</code>.</p>
+<h3><code>(okdb-cursor-next? cursor) okdb-cursor? → boolean?</code></h3>
+<p>Move the <code>CURSOR</code> to the next key if any. Return <code>#t</code> if there is such
+a key. Otherwise returns <code>#f</code>. <code>#f</code> means the cursor reached the end
+of the key space.</p>
+<h3><code>(okdb-cursor-previous? cursor) okdb-cursor? → boolean?</code></h3>
+<p>Move the <code>CURSOR</code> to the previous key if any. Return <code>#t</code> if there is
+such a key. Otherwise returns <code>#f</code>. <code>#f</code> means the cursor reached the
+begining of the key space.</p>
+<h3><code>(okdb-cursor-key cursor)</code> okdb-cursor? → bytevector?`</h3>
+<p>Return the key bytevector where <code>CURSOR</code> is positioned. It is an error
+to call <code>okdb-cursor-key</code>, when <code>CURSOR</code> reached the begining or end
+of the key space or when <code>CURSOR</code> is not positioned.</p>
+<h3><code>(okdb-cursor-value cursor)</code> okdb-cursor? → bytevector?`</h3>
+<p>Return the value bytevector where <code>CURSOR</code> is positioned. It is an
+error to call <code>okdb-cursor-key</code>, when <code>CURSOR</code> reached the begining or
+end of the key space or when <code>CURSOR</code> is not positioned.</p>
+<h3><code>(okdb-query handle key [other [offset [limit]]]) handle? bytevector? bytevector? integer? integer? → (either? bytevector? procedure?)</code></h3>
+<p><code>OKDB-QUERY</code> will query the associated database. If only <code>KEY</code> is
+provided it will return the associated value bytevector or <code>#f</code>. If
+<code>OTHER</code> is provided there is two cases:</p>
+<ul>
+<li><p><code>KEY &lt; OTHER</code> then <code>okdb-query</code> returns a generator with all the
+key-value pairs present in the database between <code>KEY</code> and <code>OTHER</code>
+excluded ie. without the key-value pair associated with <code>OTHER</code> if
+any.</p>
+</li>
+<li><p><code>OTHER &lt; KEY</code> then <code>okdb-query</code> returns the equivalent of reversing
+the generator returned by <code>(okdb-query handle KEY OTHER)</code>.</p>
+</li>
+</ul>
+<p>If <code>OFFSET</code> is provided the generator will skip as much key-value
+pairs from the start of the generator.</p>
+<p>If <code>LIMIT</code> is provided the generator will generate at most <code>LIMIT</code>
+key-value pairs.</p>
+<h3><code>(okdb-bytevector-next-prefix bytevector) bytevector? → bytevector?</code></h3>
+<p>Return the bytevector that follows <code>BYTEVECTOR</code> according to
+lexicographic order that is not prefix of <code>BYTEVECTOR</code> such as the
+following code iterates over all keys that have <code>key</code> as prefix:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">okdb-query</span> <span class="nv">handle</span> <span class="nv">key</span> <span class="p">(</span><span class="nf">okdb-bytevector-next-prefix</span> <span class="nv">key</span><span class="p">))</span>
+</pre></div>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me that I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche</p>
+        </div>
+    </body>
+</html>

@@ -55,47 +55,103 @@ def jinja(template, templates, **context):
 
 # make
 
+def make_post_from_markdown(path, base):
+    log.info('markdown: %r', path)
+    with path.open('r') as f:
+        body = f.read()
+    body = markdown(body)
+    html = '<div>{}</div>'.format(body)
+    div = string2html(html)
+    try:
+        title = div.xpath('h1/text()')[0]
+    except indexerror:
+        msg = "seems like there is not title in: %s"
+        log.critical(msg, path)
+        sys.exit(1)
+    log.debug('title is: %s', title)
+    date = title[:len('2017/03/01')]
+    date = datetime.strptime(date, '%Y/%m/%d')
+    date = date.replace(tzinfo=timezone.utc)
+    title = title[len('2017/03/01') + 3 :].strip()
+    log.debug('publication date is: %s', date)
+    post = {
+        'title': title,
+        'date': date,
+        'html': html,
+        'path': path,
+    }
+    log.debug('rendering blog post')
+    page = jinja('post.jinja2', os.getcwd(), base=base, **post)
+    filename = path.name.split('.')
+    filename[-1] = 'html'
+    filename = '.'.join(filename)
+    post['filename'] = filename
+    output = path.parent / filename
+    with output.open('w') as f:
+        f.write(page)
+    log.debug('wrote: %s', output)
+    return post
+
+
+def make_post_from_directory(path, base):
+    log.info('directory %r', path)
+    parts = []
+    for subpath in path.glob('*.md'):
+        out = dict(name=subpath.name)
+        parts.append(out)
+        with subpath.open('r') as f:
+            source = f.read()
+        html = markdown(source)
+        html = "<div>{}</div>".format(html)
+        out["html"] = html
+        html = string2html(html)
+        for level in [1,2]:
+            headers = html.xpath('h{}/text()'.format(level))
+            if not headers:
+                continue
+            header = headers[0]
+            out["header"] = header
+            break
+    parts = sorted(parts, key=lambda x: x["name"])
+    first = parts.pop()
+    # compute title and date
+    title = first["header"]
+    date = title[:len('2017/03/01')]
+    date = datetime.strptime(date, '%Y/%m/%d')
+    date = date.replace(tzinfo=timezone.utc)
+    title = title[len('2017/03/01') + 3 :].strip()
+    # sort other files according to the header
+    parts = sorted(parts, key=lambda x: x["header"])
+    html = first["html"] + ''.join(part["html"] for part in parts)
+    post = dict(
+        title=title,
+        date=date,
+        html=html,
+        path=path,
+        filename=path.name,
+    )
+    log.debug('rendering blog post')
+    page = jinja('post.jinja2', os.getcwd(), base=base, **post)
+    output = path / "index.html"
+    with output.open('w') as f:
+        f.write(page)
+    log.debug('wrote: %s', output)
+    return post
+
+
 def make(root, base):
     root = Path(root)
     log.info('getting started at: %s', root)
     blog = root / 'blog'
-    paths = blog.glob('*.md')
+    paths = blog.glob('*')
     posts = []
     for path in paths:
-        log.info('markdown: %r', path)
-        with path.open('r') as f:
-            body = f.read()
-        body = markdown(body)
-        html = '<div>{}</div>'.format(body)
-        div = string2html(html)
-        try:
-            title = div.xpath('h1/text()')[0]
-        except IndexError:
-            msg = "Seems like there is not title in: %s"
-            log.critical(msg, path)
-            sys.exit(1)
-        log.debug('title is: %s', title)
-        date = title[:len('2017/03/01')]
-        date = datetime.strptime(date, '%Y/%m/%d')
-        date = date.replace(tzinfo=timezone.utc)
-        title = title[len('2017/03/01') + 3 :].strip()
-        log.debug('publication date is: %s', date)
-        post = {
-            'title': title,
-            'date': date,
-            'html': html,
-            'path': path,
-        }
-        log.debug('rendering blog post')
-        page = jinja('post.jinja2', os.getcwd(), base=base, **post)
-        filename = path.name.split('.')
-        filename[-1] = 'html'
-        filename = '.'.join(filename)
-        post['filename'] = filename
-        output = path.parent / filename
-        with output.open('w') as f:
-            f.write(page)
-        log.debug('wrote: %s', output)
+        if str(path).endswith(".html"):
+            continue
+        if str(path).endswith(".md"):
+            post = make_post_from_markdown(path, base)
+        if path.is_dir():
+            post = make_post_from_directory(path, base)
         posts.append(post)
     posts.sort(key=lambda x: x['date'], reverse=True)
     # populate feed
