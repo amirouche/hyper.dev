@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - Codex: Dubito, ergo Cogito, ergo Sum</title>
+    </head>
+    <body>
+	<div id="root" class="post">
+	    <div><h1>2021/06/04 - Codex: Dubito, ergo Cogito, ergo Sum</h1>
+<p>Last couple of weeks I learned about:</p>
+<ul>
+<li><p>3-LISP: a theorical evolution of LISP where everything can be
+inspected;</p>
+</li>
+<li><p>Kernel: an evolution of Scheme that forgo syntax transformers as
+described in Scheme;</p>
+</li>
+<li><p>Control Flow Analysis / Just-In-Time and Ahead-Of-Time compilation /
+optimizations: what I call "dubito". It is known as partial /
+symbolic / algebraic evaluation, and includes type inference.</p>
+</li>
+</ul>
+<p>My goal is to devise and build an optimizing compiler which does not
+precludes AOT or JIT. In other words: I want both AOT and JIT. As a
+subgoal, I want to build an optimizing or optimized pattern matching
+program in the spirit of SRFI-200, and SRFI-204, that I call pattern
+combinators. One particular optimization, I think about is what
+Software Design for Flexibility [SDF] calls unification.</p>
+<p>For instance given the following <code>match</code> expression:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">match</span> <span class="nv">exp</span>
+  <span class="p">((</span><span class="nf">a</span><span class="p">)</span> <span class="nv">out1</span><span class="p">)</span>
+  <span class="p">((</span><span class="nf">a</span> <span class="nv">d</span><span class="p">)</span> <span class="nv">out2</span><span class="p">))</span>
+</pre></div>
+<p>Can be rewritten as follow:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">match</span> <span class="nv">exp</span>
+  <span class="p">((</span><span class="nf">a</span> <span class="o">.</span> <span class="nv">rest</span><span class="p">)</span> <span class="p">(</span><span class="nf">match</span> <span class="nv">rest</span>
+                <span class="p">(()</span> <span class="nv">out1</span><span class="p">)</span>
+                <span class="p">((</span><span class="nf">d</span><span class="p">)</span> <span class="nv">out2</span><span class="p">))))</span>
+</pre></div>
+<p>In that case, doing some kind of prefix compression.</p>
+<p><code>match</code> can be seen as a pattern combinator, that is a parser
+combinator that can traverse not only a sequence, but also a sequence
+made of nested sequence in a recursive way. For the purpose of the
+pattern combinator, a sequence is a finite acyclic ordered set. A
+sequence might be a list, vector or an ordered mapping. A parser
+combinator such as the one described in [GLL] is a good basis for a
+pattern combinator, except if does not support the optimizing /
+optimized part.</p>
+<p>To be able to implement optimizing pattern combiner, it would require
+to reflect upon the match predicates, in particular have access to a
+predicate <code>subsume?</code> that allows implement a partial order over
+predicates. And that should be done at in the object language.</p>
+<p>The object language is the language of the user. It is defined in
+opposition to meta language that is used to implement the object
+language. The meta language might be itself implemented in terms of
+another meta language until... until all the way down! That is where
+3-LISP call into atoms, the physical atoms (not the atoms of the
+simulation).</p>
+<p>We will just glimpse over the problem(s), and add a reflection
+applicative called <code>sum</code>, so that we can introspect how applicative
+and operative are made, so that in turn we may be able to optimize
+code at runtime from the object language.</p>
+<p>Instead of trying to implement <code>subsume?</code> and the optimizing pattern
+compiler, I will implement only arithmetic folding (replace an
+arithmetic computation with its value) with an applicative based on
+the inferences / knowledge / theories built by an applicative called
+<code>dubito</code>.</p>
+<p>So, given the following pseudo-code:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">make-frob-adder</span> <span class="nv">value</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">other</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb">+ </span><span class="nv">other</span> <span class="nv">value</span> <span class="mi">36</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="k">define </span><span class="nv">my-frob-adder-2</span> <span class="p">(</span><span class="nf">make-frob-adder</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">my-frob-adder-2</span> <span class="mi">4</span><span class="p">)</span> <span class="c1">;; =&gt; 42</span>
+</pre></div>
+<p>A simple compiler will just compile <code>my-frob-adder-2</code> into a <code>lambda</code>
+that is passed an extra environment argument called <code>static</code> so that
+the resulting procedure does not have free-variables, it will look
+like:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">my-frob-adder-2-compiled</span> <span class="nv">static</span> <span class="nv">other</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">define </span><span class="nv">value</span> <span class="p">(</span><span class="nf">environment-ref</span> <span class="nv">static</span> <span class="ss">&#39;value</span><span class="p">))</span>
+  <span class="p">(</span><span class="nb">+ </span><span class="nv">other</span> <span class="nv">value</span> <span class="mi">36</span><span class="p">)</span>
+</pre></div>
+<p>The trick is that if we forgo the last line of the previous program,
+the closure of <code>my-frob-adder-2</code> is known at compile time. If we also
+consider the last line, the whole program can be compiled to <code>42</code>:
+That is what is called (AFAIK) constant folding.</p>
+<p>Let's consider the following program:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">make-frob-adder</span> <span class="nv">value</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">other</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb">+ </span><span class="nv">other</span> <span class="nv">value</span> <span class="mi">36</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="k">define </span><span class="nv">my-frob-adder-2</span> <span class="p">(</span><span class="nf">make-frob-adder</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">my-frob-adder-2</span> <span class="p">(</span><span class="nb">string-&gt;number </span><span class="p">(</span><span class="nb">cadr </span><span class="p">(</span><span class="nf">command-line</span><span class="p">))))</span>
+</pre></div>
+<p>It is similar to the original program, except it <code>my-frob-adder-2</code>
+takes its argument from command-line, hence it can not be folded into
+an integer object, because... <code>(command-line)</code> is not known at compile
+time. So, indeed after a simple compilation, we end up with the
+following code:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">my-frob-adder-2</span> <span class="nv">static</span> <span class="nv">other</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">define </span><span class="nv">value</span> <span class="p">(</span><span class="nf">environment-ref</span> <span class="nv">static</span> <span class="ss">&#39;value</span><span class="p">))</span>
+  <span class="p">(</span><span class="nb">+ </span><span class="nv">other</span> <span class="nv">value</span> <span class="mi">36</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">my-frob-adder-2</span> <span class="p">(</span><span class="nf">alist-&gt;environment</span> <span class="o">`</span><span class="p">((</span><span class="nf">value</span> <span class="o">.</span> <span class="o">,</span><span class="mi">2</span><span class="p">)))</span> <span class="p">(</span><span class="nb">string-&gt;number </span><span class="p">(</span><span class="nb">cadr </span><span class="p">(</span><span class="nf">command-line</span><span class="p">))))</span>
+</pre></div>
+<p>That is naive example: an optimizing compiler can create the following
+optimized definition for <code>my-frob-adder-2</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">my-frob-adder-2</span> <span class="nv">other</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">+ </span><span class="nv">other</span> <span class="mi">40</span><span class="p">))</span> <span class="c1">;; 36 + 4 = 40</span>
+</pre></div>
+<p>So what is this all about?!1!</p>
+<p>It is also seems a little naive given that Chez Scheme can compile to
+native code an s-expr at runtime, given a perfomance timer (cost
+center), and counters, that gather new knowledge only known at
+runtime, it is completly possible to implement a manual JIT
+[MANUAL-JIT].</p>
+<p>So what do <code>sum</code> do that is new? Not much: it puts all that together.</p>
+<p>Kernel will factorize macro and procedure into operatives, it will
+also reify all environments: static / lexical, and dynamic. The
+application <code>sum</code> will reify in the object language the implementation
+of any object... including <code>eval</code> in other words, <code>eval</code> can be
+reifyed as a meta-evaluator or better as the "source code" in the
+previous meta language. <code>sum</code> does not only mean that the source is
+embedded in the program, but also prescribe that it is possible to
+represent in a possibly infinitly resursive way all the
+meta-languages. The limit being our knowledge, time, and energy to
+encode that as source. Does it mean that this language is
+self-bootstrappable, in other words that it does not require a seed:
+no. Even it it self-hosted and self-describing, it requires a seed
+[BOOTSTRAPPABLE].</p>
+<p>In the above paragraph I glossed over <code>(sum eval)</code>: i) does it return
+a meta-evaluator, a program represented in the object language that
+can evaluate the object language (itself), ii) does it return an
+evaluator in the previous meta-language. Both are possible, the
+latter is more interesting, because it expose the compiler tower
+[NANOPASS] to the object language.</p>
+<p><code>eval</code> is not the only interesting primitive procedure. In the context
+of Scheme, it is interesting to reflect upon a couple of
+procedures. One of the most interesting is <code>call/cc</code>, another
+interesting procedure is the non-standard <code>expand</code> and yet another is
+everything related to the garbage collector. To stay goal-driven, a
+target application of that reflection, that I think may be
+interesting, can be to disable or customize the garbage collector for
+a subset of the program. Another goal might to change for a subset of
+the program the evaluation strategy without relying on meta-evaluation
+[EVALS].</p>
+<p>In the case where <code>(sum eval)</code> returns the source of <code>eval</code> in the
+previous meta-language, <code>expand</code>, <code>call/cc</code>, and the garbage collector
+should be represented... somehow!</p>
+<h2>References</h2>
+<ul>
+<li><p>[SDF] <a href="https://mitpress.mit.edu/books/software-design-flexibility">https://mitpress.mit.edu/books/software-design-flexibility</a></p>
+</li>
+<li><p>[GLL] <a href="https://epsil.github.io/gll/">https://epsil.github.io/gll/</a></p>
+</li>
+<li><p>[MANUAL-JIT] <a href="https://m00natic.github.io/lisp/manual-jit.html">https://m00natic.github.io/lisp/manual-jit.html</a></p>
+</li>
+<li><p>[BOOTSTRAPPABLE] <a href="http://bootstrappable.org/">http://bootstrappable.org/</a></p>
+</li>
+<li><p>[NANOPASS] <a href="https://nanopass.org/">https://nanopass.org/</a></p>
+</li>
+<li><p>[EVALS] <a href="https://en.wikipedia.org/wiki/Evaluation_strategy">https://en.wikipedia.org/wiki/Evaluation_strategy</a></p>
+</li>
+</ul>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me that I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="https://hyper.dev/feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche</p>
+        </div>
+    </body>
+</html>
