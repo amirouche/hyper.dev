@@ -142,8 +142,8 @@ runtime, it is completly possible to implement a manual JIT
 
 So what do `sum` do that is new? Not much: it puts all that together.
 
-Kernel will factorize macro and procedure into operatives, it will
-also reify all environments: static / lexical, and dynamic. The
+Kernel [R-1RK] will factorize macro and procedure into operatives, it
+will also reify all environments: static / lexical, and dynamic. The
 application `sum` will reify in the object language the implementation
 of any object... including `eval` in other words, `eval` can be
 reifyed as a meta-evaluator or better as the "source code" in the
@@ -166,7 +166,7 @@ latter is more interesting, because it expose the compiler tower
 `eval` is not the only interesting primitive procedure. In the context
 of Scheme, it is interesting to reflect upon a couple of
 procedures. One of the most interesting is `call/cc`, another
-interesting procedure is the non-standard `expand` and yet another is
+interesting procedure is the non-standard `expand` and yet another
 everything related to the garbage collector. To stay goal-driven, a
 target application of that reflection, that I think may be
 interesting, can be to disable or customize the garbage collector for
@@ -185,6 +185,8 @@ should be represented... somehow!
 - [GLL] https://epsil.github.io/gll/
 
 - [MANUAL-JIT] https://m00natic.github.io/lisp/manual-jit.html
+
+- [R-1RK] https://web.cs.wpi.edu/~jshutt/kernel.html
 
 - [BOOTSTRAPPABLE] http://bootstrappable.org/
 

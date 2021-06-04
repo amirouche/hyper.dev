@@ -122,8 +122,8 @@ center), and counters, that gather new knowledge only known at
 runtime, it is completly possible to implement a manual JIT
 [MANUAL-JIT].</p>
 <p>So what do <code>sum</code> do that is new? Not much: it puts all that together.</p>
-<p>Kernel will factorize macro and procedure into operatives, it will
-also reify all environments: static / lexical, and dynamic. The
+<p>Kernel [R-1RK] will factorize macro and procedure into operatives, it
+will also reify all environments: static / lexical, and dynamic. The
 application <code>sum</code> will reify in the object language the implementation
 of any object... including <code>eval</code> in other words, <code>eval</code> can be
 reifyed as a meta-evaluator or better as the "source code" in the
@@ -144,7 +144,7 @@ latter is more interesting, because it expose the compiler tower
 <p><code>eval</code> is not the only interesting primitive procedure. In the context
 of Scheme, it is interesting to reflect upon a couple of
 procedures. One of the most interesting is <code>call/cc</code>, another
-interesting procedure is the non-standard <code>expand</code> and yet another is
+interesting procedure is the non-standard <code>expand</code> and yet another
 everything related to the garbage collector. To stay goal-driven, a
 target application of that reflection, that I think may be
 interesting, can be to disable or customize the garbage collector for
@@ -161,6 +161,8 @@ should be represented... somehow!</p>
 <li><p>[GLL] <a href="https://epsil.github.io/gll/">https://epsil.github.io/gll/</a></p>
 </li>
 <li><p>[MANUAL-JIT] <a href="https://m00natic.github.io/lisp/manual-jit.html">https://m00natic.github.io/lisp/manual-jit.html</a></p>
+</li>
+<li><p>[R-1RK] <a href="https://web.cs.wpi.edu/~jshutt/kernel.html">https://web.cs.wpi.edu/~jshutt/kernel.html</a></p>
 </li>
 <li><p>[BOOTSTRAPPABLE] <a href="http://bootstrappable.org/">http://bootstrappable.org/</a></p>
 </li>
