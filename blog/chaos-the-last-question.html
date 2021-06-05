@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/static/normalize.css">
+	<link rel="stylesheet" href="/static/highlight.css">
+	<link rel="stylesheet" href="/static/styles.css">
+	<title>hyper.dev - Chaos: The Last Question</title>
+    </head>
+    <body>
+	<div id="root" class="post">
+	    <div><h1>2021/06/05 - Chaos: The Last Question</h1>
+<p>I am investigating this pattern combinator thing, because pattern are
+everywhere in programming e.g Chomsky's grammars, and also Machine
+Learning. The thing I am trying to build is different from Machine
+Learning pattern recognition. Pattern combinators are neither
+supervised nor unsupervised, they do not learn, they are teached with a
+specification constructored with combinators how to recognize
+patterns.</p>
+<p>Pattern matching facility ease the work of constructing an interpreter
+or compiler. They are the basis of Scheme syntax-rule, syntax-case,
+nanopass framework, Kernel, and GNU Guile compiler tower
+[GNU-GUILE]. Part of Guile compiler tower, there is <code>foldt*</code> by Andy
+Wingo. <code>foldt*</code> builds upon Kiselyov's <code>foldt</code>. Both <code>foldt</code> and
+<code>foldt*</code> allow to recognize patterns in s-expr, they also allow to
+construct a new object (just like regular <code>fold</code>). Pattern combinators
+are concerned about traversing the source; the patterns in that source
+are recognized with user prodiced procedures (fhere, fdown, fup);
+pattern combinators always contruct an object following the same
+template, that is a flat environment, such as a mapping or association
+list.</p>
+<p>In the previous note, I have glossed over <code>sum</code> that re-surface the
+implementation of a procedure. <code>dubito</code> some kind of inference
+engine. <code>cogito</code> was barely mentioned, but I meant it as an
+<code>eval</code>.</p>
+<p>In this note, I will try to explain how <code>(sum cogito)</code> works.</p>
+<p>Here is the <em>Shutt's Equation of Software</em>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="nv">eval</span>
+  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nb">exp </span><span class="nv">env</span><span class="p">)</span>
+    <span class="p">(</span><span class="k">cond </span><span class="p">((</span><span class="nf">kernel-pair?</span> <span class="nv">exp</span><span class="p">)</span>  <span class="p">(</span><span class="nf">combine</span> <span class="p">(</span><span class="nb">eval </span><span class="p">(</span><span class="nf">kernel-car</span> <span class="nv">exp</span><span class="p">)</span> <span class="nv">env</span><span class="p">)</span>
+                                        <span class="p">(</span><span class="nf">kernel-cdr</span> <span class="nv">exp</span><span class="p">)</span>
+                                        <span class="nv">env</span><span class="p">))</span>
+          <span class="p">((</span><span class="nb">symbol? </span><span class="nv">exp</span><span class="p">)</span>  <span class="p">(</span><span class="nf">lookup</span> <span class="nv">exp</span> <span class="nv">env</span> <span class="nv">context</span><span class="p">))</span>
+          <span class="p">(</span><span class="k">else </span><span class="nv">exp</span><span class="p">))))</span>
+</pre></div>
+<p>This is a slightly modified version of <code>SINK</code>'s <code>eval</code>, I dropped the
+<code>context</code> that is the reification of a continuation, that in <code>(call/cc
+proc)</code> is passed to <code>PROC</code>. Unlike in Scheme, a context is
+encapsulated ie. it is its own type (see Racket and Gambit).</p>
+<h2>Tentative emulation of Kernel with Scheme</h2>
+<p>About Scheme, I will try to describe the semantic of Kernel using
+Scheme without actually building an interpreter in Scheme (that is
+what SINK does). Instead, I will describe a subset of Kernel in
+particular, the <code>$vau</code> operative, that allows to create new
+operative with Scheme pseudo-code:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define-syntax </span><span class="nv">$vau</span>
+  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">stx</span><span class="p">)</span>
+    <span class="p">(</span><span class="nf">syntax-case</span> <span class="nv">stx</span> <span class="p">()</span>
+      <span class="p">((</span><span class="nf">$vau</span> <span class="nv">args</span> <span class="nv">env</span> <span class="nv">body</span> <span class="o">...</span><span class="p">)</span>
+       <span class="o">#&#39;</span><span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">args</span> <span class="nv">env</span><span class="p">)</span> <span class="nv">body</span> <span class="o">...</span><span class="p">)))))</span>
+</pre></div>
+<p>That is wild guess ie. prelimeray translation. To call a procedure
+constructed with <code>$vau</code> you need another syntax transformer and a few
+helpers:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define-syntax </span><span class="nv">apply-vau</span>
+  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">stx</span><span class="p">)</span>
+    <span class="p">(</span><span class="nf">syntax-case</span> <span class="nv">stx</span> <span class="p">()</span>
+      <span class="p">((</span><span class="nf">apply-vau</span> <span class="nv">operative</span> <span class="nv">args</span> <span class="o">...</span><span class="p">)</span>
+       <span class="o">#&#39;</span><span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">dynamic-environment</span> <span class="p">(</span><span class="nf">environment-current</span><span class="p">)))</span>
+           <span class="p">(</span><span class="nf">operative</span> <span class="ss">&#39;args</span> <span class="nv">dynamic-environment</span><span class="p">))))))</span>
+</pre></div>
+<p>(Now that I think about it, it can be implemented in terms of
+<code>syntax-rule</code>)</p>
+<p>Mind the quoted <code>args</code>, <code>args</code> is constructed in the template as a
+quoted expression, and its evaluation might be done in <code>body ...</code> with
+the help of Scheme's <code>(eval exp environment)</code>.</p>
+<p><code>environment-current</code> is like Guile's <code>the-environment</code>.</p>
+<h2>Another emulation of Kernel with Scheme</h2>
+<p>Another approach is to use only procedures and no macros. For instance:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">my-operative</span> <span class="nv">args</span> <span class="nv">env</span><span class="p">)</span>
+  <span class="nv">body</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+<p>Since there is two kinds of callables in <code>Kernel</code>: operative and
+applicative.  One will need to prefix every Scheme call with a
+<code>kernel-call</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">kernel-call</span> <span class="nv">combiner</span> <span class="nv">env</span> <span class="nv">args</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nf">applicative?</span> <span class="nv">combiner</span><span class="p">)</span>
+      <span class="p">((</span><span class="nf">unwrap</span> <span class="nv">combiner</span><span class="p">)</span> <span class="p">(</span><span class="nb">map </span><span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">arg</span><span class="p">)</span> <span class="p">(</span><span class="nb">eval </span><span class="nv">arg</span> <span class="nv">env</span><span class="p">))))</span>
+      <span class="c1">;; otherwise, it is an operative</span>
+      <span class="p">(</span><span class="nf">combiner</span> <span class="nv">args</span> <span class="nv">env</span><span class="p">)))</span>
+</pre></div>
+<p>Where <code>applicative?</code> is the predicate associated with:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-record-type</span> <span class="nv">&lt;applicative&gt;</span>
+  <span class="p">(</span><span class="nf">wrap</span> <span class="nv">operative</span><span class="p">)</span>
+  <span class="nv">applicative?</span>
+  <span class="p">(</span><span class="nf">operative</span> <span class="nv">unwrap</span><span class="p">))</span>
+</pre></div>
+<p>Then what you write in Kernel as:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">my-combiner</span> <span class="nv">a</span> <span class="nv">b</span> <span class="nv">c</span><span class="p">)</span>
+</pre></div>
+<p>Would be transpiled as:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">kernel-call</span> <span class="nv">my-combiner</span> <span class="p">(</span><span class="nf">environment-current</span><span class="p">)</span> <span class="p">(</span><span class="nb">list </span><span class="ss">&#39;a</span> <span class="ss">&#39;b</span> <span class="ss">&#39;c</span><span class="p">))</span>
+</pre></div>
+<p><code>(environment-current)</code> current can be constructed at compile time,
+since it is the static / lexical scope (I hope).</p>
+<p>The only missing piece I can forsee is that Kernel support trees as
+operands, but that requires more work, including a pattern matcher!</p>
+<h2><code>sum</code>, or no <code>sum</code></h2>
+<p>Previously, I wrote the goal of <code>sum</code> is ultimately to call <code>(sum
+eval)</code> and return an object language representation of <code>eval</code> in the
+meta-language. In other words, it would return the full source of the
+compiler, one language-level below the object language.</p>
+<p>I will investigate <code>(sum +)</code>: what is the meta-language definition of
+the applicative <code>+</code> in Scheme:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">sum</span> <span class="nv">+</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">applicative</span> <span class="p">(</span><span class="nf">operative</span> <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">args</span> <span class="nv">env</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="nf">env-ref</span> <span class="nv">env</span> <span class="ss">&#39;a</span><span class="p">)</span> <span class="p">(</span><span class="nf">env-ref</span> <span class="nv">env</span> <span class="ss">&#39;b</span><span class="p">))))))</span>
+</pre></div>
+<p>It does not make sense to compile a mere <code>lambda</code>, you need a full
+lambda such as:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">args</span> <span class="nv">env</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="nf">env-ref</span> <span class="nv">env</span> <span class="ss">&#39;a</span><span class="p">)</span> <span class="p">(</span><span class="nf">env-ref</span> <span class="nv">env</span> <span class="ss">&#39;b</span><span class="p">)))</span>
+</pre></div>
+<p>It would be transpiled to the following web assembly:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">func</span> <span class="nv">$a</span><span class="o">.</span><span class="mi">683</span> <span class="p">(</span><span class="nf">param</span> <span class="nv">$cl</span><span class="o">.</span><span class="mi">397</span> <span class="nv">externref</span><span class="p">)</span> <span class="p">(</span><span class="nf">result</span> <span class="nv">i32</span><span class="p">)</span> <span class="p">(</span><span class="nf">result</span> <span class="nv">externref</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">local</span> <span class="nv">$a</span> <span class="nv">externref</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">local</span> <span class="nv">$b</span> <span class="nv">externref</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">local</span> <span class="nv">$out</span> <span class="nv">externref</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">set</span> <span class="nv">$k</span> <span class="p">(</span><span class="nf">table</span><span class="o">.</span><span class="nv">get</span> <span class="nv">$stack</span> <span class="p">(</span><span class="nf">i32</span><span class="o">.</span><span class="nv">const</span> <span class="mi">0</span><span class="p">)))</span>
+      <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">set</span> <span class="nv">$a</span> <span class="p">(</span><span class="nf">table</span><span class="o">.</span><span class="nv">get</span> <span class="nv">$stack</span> <span class="p">(</span><span class="nf">i32</span><span class="o">.</span><span class="nv">const</span> <span class="mi">1</span><span class="p">)))</span>
+      <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">set</span> <span class="nv">$b</span> <span class="p">(</span><span class="nf">table</span><span class="o">.</span><span class="nv">get</span> <span class="nv">$stack</span> <span class="p">(</span><span class="nf">i32</span><span class="o">.</span><span class="nv">const</span> <span class="mi">2</span><span class="p">)))</span>
+      <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">set</span> <span class="nv">$out</span> <span class="p">(</span><span class="nf">call</span> <span class="nv">$+</span> <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">get</span> <span class="nv">$a</span><span class="p">)</span> <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">get</span> <span class="nv">$a</span><span class="p">)))</span>
+      <span class="p">(</span><span class="nf">table</span><span class="o">.</span><span class="nv">set</span> <span class="nv">$stack</span> <span class="p">(</span><span class="nf">i32</span><span class="o">.</span><span class="nv">const</span> <span class="mi">0</span><span class="p">)</span> <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">get</span> <span class="nv">$out</span><span class="p">))</span>
+      <span class="p">(</span><span class="nf">i32</span><span class="o">.</span><span class="nv">const</span> <span class="mi">1</span><span class="p">)</span> <span class="c1">;; continue = yes</span>
+      <span class="p">(</span><span class="nf">local</span><span class="o">.</span><span class="nv">get</span> <span class="nv">$k</span><span class="p">))</span> <span class="c1">;; continuation closure</span>
+</pre></div>
+<p>The previous text would be the representation of <code>(sum (sum +))</code> in
+the object language. More or less.</p>
+<h2>References</h2>
+<ul>
+<li>[GNU-GUILE] <a href="https://www.gnu.org/software/guile/docs/docs-2.2/guile-ref/Compiler-Tower.html">https://www.gnu.org/software/guile/docs/docs-2.2/guile-ref/Compiler-Tower.html</a></li>
+</ul>
+</div>
+	</div>
+        <div id="footer">
+            <p>
+                As always if you like this article, want to share
+                feedback, or tell me that I got it wrong. Please <a href="mailto:amirouche@hyper.dev">get
+                in touch</a>.
+            </p>
+            <p>You might want to subscribe to the blog <a href="http://localhost:8000/feed.xml">feed</a>!</p>
+            <p>Go back to the <a href="https://hyper.dev">homepage</a></p>
+            <p>Amirouche</p>
+        </div>
+    </body>
+</html>

@@ -148,9 +148,9 @@ def make(root, base):
     for path in paths:
         if str(path).endswith(".html"):
             continue
-        if str(path).endswith(".md"):
+        elif str(path).endswith(".md"):
             post = make_post_from_markdown(path, base)
-        if path.is_dir():
+        elif path.is_dir():
             post = make_post_from_directory(path, base)
         posts.append(post)
     posts.sort(key=lambda x: x['date'], reverse=True)
